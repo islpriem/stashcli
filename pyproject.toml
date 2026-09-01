@@ -1,0 +1,65 @@
+[project]
+name = "stashcli"
+version = "0.1.0"
+description = "STASH command-line client"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28",
+    "pydantic>=2.9",
+    "pymunge>=0.1.3",
+    "rich>=13.9",
+    "typer>=0.15",
+]
+
+[project.scripts]
+stash = "stashcli.main:cli"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stashcli"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers --strict-config"
+
+[tool.coverage.run]
+source = ["src/stashcli"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 90
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "\\.\\.\\."]
+
+[tool.ruff]
+line-length = 96
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "A", "C4", "RUF", "SIM", "PTH", "ARG", "TID"]
+# Errors are named after what went wrong (AuthUnavailable).
+ignore = ["N818"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests take fixtures they do not use, and their names read as sentences.
+"tests/*" = ["ARG", "N802"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+# pymunge is a ctypes wrapper around libmunge and ships no type information.
+module = ["pymunge.*"]
+ignore_missing_imports = true
