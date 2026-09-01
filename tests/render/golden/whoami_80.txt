@@ -1,0 +1,4 @@
+mmustermann (uid 1000)
+Groups   users, hpc-admin
+Admin    no
+Server   http://controller:8000 · stashd 0.1.0 · API v1

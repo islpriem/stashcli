@@ -1,0 +1,3 @@
+ID       LOCATION  ROLES         TIER  DRIVER  CAPACITY   USER LIMIT  STATE
+HOT1     LOC1      source        hot   posix   —          —           ok
+LOC2HOT  LOC2      cache+source  hot   posix   500.0 TiB  100.0 GiB   drained
