@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Annotated
 
 import typer
 
-from stashcli.commands import topology
+from stashcli.commands import filesets, topology
 from stashcli.config.settings import Settings, default_config_paths, resolve_settings
 from stashcli.errors import INTERRUPTED, CliError, UsageError
 from stashcli.render.output import OutputOptions
@@ -27,6 +27,12 @@ app = typer.Typer(
     pretty_exceptions_enable=False,
     help="STASH: named filesets on cache storage, warmed from a source storage.",
 )
+fileset_app = typer.Typer(no_args_is_help=True, help="Work with filesets.")
+fileset_app.command("list")(filesets.list_filesets)
+fileset_app.command("show")(filesets.show)
+app.add_typer(fileset_app, name="fileset")
+app.command("list")(filesets.list_filesets)
+app.command("quota")(filesets.quota)
 app.command("whoami")(topology.whoami)
 app.command("locations")(topology.locations)
 app.command("storages")(topology.storages)

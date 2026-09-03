@@ -24,13 +24,13 @@ WHOAMI = {
     "server_version": __version__,
     "api_version": "v1",
 }
-LOCATIONS = {
+LOCATIONS: dict[str, Any] = {
     "locations": [
         {"id": "LOC1", "name": "Site 1", "enabled": True},
         {"id": "LOC2", "name": "Site 2", "enabled": False},
     ]
 }
-STORAGES = {
+STORAGES: dict[str, Any] = {
     "storages": [
         {
             "id": "HOT1",
@@ -45,6 +45,7 @@ STORAGES = {
             "daemon": "hot1",
             "drained": False,
             "enabled": True,
+            "quota_enforced": False,
         },
         {
             "id": "LOC2HOT",
@@ -59,8 +60,108 @@ STORAGES = {
             "daemon": "loc2hot",
             "drained": True,
             "enabled": True,
+            "quota_enforced": False,
         },
     ]
+}
+
+GIB = 1024**3
+
+FILESETS: dict[str, Any] = {
+    "filesets": [
+        {
+            "id": 1,
+            "name": "abc",
+            "reference": "LOC2HOT:abc",
+            "owner_user": "mmustermann",
+            "storage_id": "LOC2HOT",
+            "kind": "cached",
+            "state": "READY",
+            "path": "/cache/loc2/mmustermann/abc",
+            "allocated_bytes": 39514044170,
+            "used_bytes": 37580963840,
+            "used_bytes_at": "2026-08-29T09:20:00Z",
+            "file_count": 12043,
+            "over_allocation": False,
+            "source": "HOT1:/myuser/abc",
+            "created_at": "2026-08-29T07:00:00Z",
+            "warm_started_at": "2026-08-29T07:02:00Z",
+            "warm_finished_at": "2026-08-29T09:14:00Z",
+            "last_flushed_at": None,
+            "last_flush_target": None,
+            "released_at": None,
+            "last_transfer_id": 123456,
+        },
+        {
+            "id": 2,
+            "name": "results",
+            "reference": "LOC2HOT:results",
+            "owner_user": "mmustermann",
+            "storage_id": "LOC2HOT",
+            "kind": "output",
+            "state": "READY",
+            "path": "/cache/loc2/mmustermann/results",
+            "allocated_bytes": 53687091200,
+            "used_bytes": 12992276070,
+            "used_bytes_at": "2026-08-30T08:30:00Z",
+            "file_count": 44,
+            "over_allocation": False,
+            "source": None,
+            "created_at": "2026-08-30T08:00:00Z",
+            "warm_started_at": None,
+            "warm_finished_at": None,
+            "last_flushed_at": None,
+            "last_flush_target": None,
+            "released_at": None,
+            "last_transfer_id": None,
+        },
+    ]
+}
+
+ALLOCATIONS: dict[str, Any] = {
+    "user": "mmustermann",
+    "total": {
+        "limit_bytes": 250 * GIB,
+        "allocated_bytes": 110 * GIB,
+        "used_bytes": 47 * GIB,
+        "free_bytes": 140 * GIB,
+    },
+    "storages": [
+        {
+            "storage_id": "LOC2HOT",
+            "limit_bytes": 200 * GIB,
+            "allocated_bytes": 110 * GIB,
+            "used_bytes": 47 * GIB,
+            "free_bytes": 90 * GIB,
+        }
+    ],
+}
+
+TRANSFERS: dict[str, Any] = {
+    "transfers": [
+        {
+            "id": 123456,
+            "kind": "warm",
+            "user": "mmustermann",
+            "fileset_id": 1,
+            "peer_ref": "HOT1:/myuser/abc",
+            "state": "SUCCEEDED",
+            "route": "HOT1->LOC2HOT",
+            "bytes_total": 37580963840,
+            "bytes_done": 37580963840,
+            "files_total": 12043,
+            "files_done": 12043,
+            "executing_daemon_id": "hot1",
+            "bwlimit_bytes_per_s": 100000000,
+            "attempt": 1,
+            "error_code": None,
+            "error_detail": None,
+            "submitted_at": "2026-08-29T07:00:00Z",
+            "started_at": "2026-08-29T07:02:00Z",
+            "finished_at": "2026-08-29T09:14:00Z",
+        }
+    ],
+    "next_cursor": None,
 }
 
 Handler = Callable[[httpx.Request], httpx.Response]
@@ -91,6 +192,9 @@ ALL_PAYLOADS = {
     "/api/v1/whoami": WHOAMI,
     "/api/v1/locations": LOCATIONS,
     "/api/v1/storages": STORAGES,
+    "/api/v1/filesets": FILESETS,
+    "/api/v1/allocations": ALLOCATIONS,
+    "/api/v1/transfers": TRANSFERS,
 }
 
 

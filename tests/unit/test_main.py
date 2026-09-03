@@ -297,3 +297,11 @@ def test_the_real_client_uses_munge_and_the_configured_timeout() -> None:
     assert isinstance(client._auth, MungeAuthProvider)
     assert client._client.timeout.read == 7.0
     client.close()
+
+
+def test_the_package_exposes_only_its_version() -> None:
+    import stashcli
+
+    assert stashcli.__version__
+    with pytest.raises(AttributeError):
+        _ = stashcli.no_such_thing
