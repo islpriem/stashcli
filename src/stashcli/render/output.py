@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 from dataclasses import dataclass
+from datetime import UTC, datetime, tzinfo
 from typing import TYPE_CHECKING, Any, TextIO
 
 if TYPE_CHECKING:
@@ -16,6 +17,7 @@ if TYPE_CHECKING:
 
 SCHEMA_VERSION = 1
 DEFAULT_WIDTH = 80
+LOCAL = datetime.now().astimezone().tzinfo or UTC
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +27,8 @@ class OutputOptions:
     width: int = DEFAULT_WIDTH
     tty: bool = False
     quiet: bool = False
+    # Timestamps arrive UTC and are shown where the user is; tests pin it.
+    tz: tzinfo = LOCAL
 
     @classmethod
     def detect(
