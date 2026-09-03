@@ -7,6 +7,10 @@ them from a source storage (`warm`), and write results back out or release them 
 stash whoami
 stash storages
 stash locations
+stash list                        # every fileset you can see, and what you have reserved
+stash fileset list --storage LOC2HOT --long
+stash fileset show LOC2HOT:mydir  # the record and its transfer history
+stash quota                       # limits, allocation and usage per cache
 ```
 
 Global options: `--server URL`, `--storage ID`, `--json`, `--no-color`, `--timeout S`,

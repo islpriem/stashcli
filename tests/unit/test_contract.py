@@ -6,6 +6,13 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
+from stashcli.models.filesets import (
+    Allocations,
+    AllocationTotals,
+    Fileset,
+    StorageAllocation,
+    Transfer,
+)
 from stashcli.models.topology import Location, Storage, WhoAmI
 
 CONTRACT = Path(__file__).parents[2] / "contracts" / "openapi.json"
@@ -17,7 +24,17 @@ def properties_of(name: str) -> set[str]:
 
 
 @pytest.mark.parametrize(
-    ("model", "name"), [(WhoAmI, "WhoAmI"), (Location, "Location"), (Storage, "Storage")]
+    ("model", "name"),
+    [
+        (WhoAmI, "WhoAmI"),
+        (Location, "Location"),
+        (Storage, "Storage"),
+        (Fileset, "Fileset"),
+        (Transfer, "Transfer"),
+        (Allocations, "Allocations"),
+        (AllocationTotals, "AllocationTotals"),
+        (StorageAllocation, "StorageAllocation"),
+    ],
 )
 def test_a_model_mirrors_its_server_schema(model: type[BaseModel], name: str) -> None:
     assert set(model.model_fields) == properties_of(name)

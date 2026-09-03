@@ -569,6 +569,10 @@
             "title": "Location",
             "type": "string"
           },
+          "quota_enforced": {
+            "title": "Quota Enforced",
+            "type": "boolean"
+          },
           "roles": {
             "items": {
               "$ref": "#/components/schemas/StorageRole"
@@ -592,7 +596,8 @@
           "default_user_allocation_limit_bytes",
           "daemon",
           "drained",
-          "enabled"
+          "enabled",
+          "quota_enforced"
         ],
         "title": "Storage",
         "type": "object"
@@ -1159,6 +1164,22 @@
                 }
               ],
               "title": "User"
+            }
+          },
+          {
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Name"
             }
           },
           {
@@ -1862,6 +1883,23 @@
                 }
               ],
               "title": "Storage"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fileset_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fileset Id"
             }
           },
           {
