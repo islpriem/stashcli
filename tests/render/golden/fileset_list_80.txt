@@ -1,0 +1,7 @@
+All caches   250.0 GiB limit · 110.0 GiB allocated · 140.0 GiB free
+
+STORAGE  NAME     KIND    STATE  ALLOCATED  USED      LAST CHANGE
+LOC2HOT  abc      cached  READY  36.8 GiB   35.0 GiB  warmed 2026-08-29 09:14
+LOC2HOT  results  output  READY  50.0 GiB   12.1 GiB  created 2026-08-30 08:00
+
+Paths under /cache/loc2/mmustermann/

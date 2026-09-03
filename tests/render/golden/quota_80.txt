@@ -1,0 +1,8 @@
+User mmustermann
+All caches   250.0 GiB limit · 110.0 GiB allocated · 140.0 GiB free
+
+STORAGE  LIMIT      ALLOCATED  USED      FREE
+LOC2HOT  200.0 GiB  110.0 GiB  47.0 GiB  90.0 GiB
+
+On LOC2HOT the allocation is not enforced by the filesystem: writing past it
+succeeds and is reported afterwards.

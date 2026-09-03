@@ -1,0 +1,12 @@
+LOC2HOT:abc  (cached, READY)
+Path       /cache/loc2/mmustermann/abc
+Owner      mmustermann
+Allocated  36.8 GiB
+Used       35.0 GiB at 2026-08-29 09:20
+Files      12043
+Source     HOT1:/myuser/abc
+Created    2026-08-29 07:00
+Warmed     2026-08-29 09:14
+
+TRANSFER  KIND  STATE      MOVED     FINISHED
+123456    warm  SUCCEEDED  35.0 GiB  2026-08-29 09:14
