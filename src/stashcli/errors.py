@@ -73,6 +73,10 @@ class AuthUnavailable(CliError):
         )
 
 
+class NotFoundError(CliError):
+    exit_code = NOT_FOUND
+
+
 class TransportError(CliError):
     exit_code = UNAVAILABLE
 
