@@ -39,6 +39,7 @@ class Storage(Wire):
     daemon: str
     drained: bool
     enabled: bool
+    quota_enforced: bool
 
 
 class Storages(Wire):
