@@ -1,5 +1,7 @@
 """Mirrors of the server schemas, field for field (contracts/openapi.json)."""
 
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -40,6 +42,8 @@ class Storage(Wire):
     drained: bool
     enabled: bool
     quota_enforced: bool
+    daemon_seen_at: datetime | None
+    daemon_config_revision: int | None
 
 
 class Storages(Wire):

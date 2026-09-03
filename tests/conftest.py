@@ -46,6 +46,8 @@ STORAGES: dict[str, Any] = {
             "drained": False,
             "enabled": True,
             "quota_enforced": False,
+            "daemon_seen_at": None,
+            "daemon_config_revision": None,
         },
         {
             "id": "LOC2HOT",
@@ -61,6 +63,8 @@ STORAGES: dict[str, Any] = {
             "drained": True,
             "enabled": True,
             "quota_enforced": False,
+            "daemon_seen_at": "2026-09-01T12:00:00Z",
+            "daemon_config_revision": 42,
         },
     ]
 }

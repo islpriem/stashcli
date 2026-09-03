@@ -18,7 +18,7 @@ def whoami(ctx: typer.Context) -> None:
     with runtime.client() as client:
         answer = client.whoami()
     if runtime.output.json:
-        emit_json(answer.model_dump())
+        emit_json(answer.model_dump(mode="json"))
         return
     render_whoami(runtime.output.console(), answer, runtime.settings.server)
 
@@ -32,7 +32,7 @@ def locations(ctx: typer.Context) -> None:
     with runtime.client() as client:
         found = client.locations()
     if runtime.output.json:
-        emit_json({"locations": [location.model_dump() for location in found]})
+        emit_json({"locations": [location.model_dump(mode="json") for location in found]})
         return
     render_locations(runtime.output.console(), found)
 
@@ -46,6 +46,6 @@ def storages(ctx: typer.Context) -> None:
     with runtime.client() as client:
         found = client.storages()
     if runtime.output.json:
-        emit_json({"storages": [storage.model_dump() for storage in found]})
+        emit_json({"storages": [storage.model_dump(mode="json") for storage in found]})
         return
     render_storages(runtime.output.console(), found)

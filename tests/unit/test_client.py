@@ -319,6 +319,8 @@ class TestEndpoints:
                         "drained": False,
                         "enabled": True,
                         "quota_enforced": False,
+                        "daemon_seen_at": None,
+                        "daemon_config_revision": None,
                     }
                 ]
             },
