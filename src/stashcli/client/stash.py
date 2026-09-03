@@ -13,6 +13,7 @@ import httpx
 from stashcli import __version__
 from stashcli.auth.provider import AuthProvider
 from stashcli.errors import CliError, ServerError, TransportError
+from stashcli.models.filesets import Allocations, Fileset, Filesets, Transfers
 from stashcli.models.topology import Location, Locations, Storage, Storages, WhoAmI
 
 API_PREFIX = "/api/v1"
@@ -74,8 +75,46 @@ class StashClient:
     def storages(self) -> list[Storage]:
         return Storages.model_validate(self._get("/storages")).storages
 
+    def filesets(
+        self,
+        *,
+        storage: str | None = None,
+        user: str | None = None,
+        name: str | None = None,
+        kind: str | None = None,
+        state: str | None = None,
+    ) -> list[Fileset]:
+        params = {"storage": storage, "user": user, "name": name, "kind": kind, "state": state}
+        return Filesets.model_validate(self._get("/filesets", params)).filesets
+
+    def transfers(
+        self,
+        *,
+        user: str | None = None,
+        state: str | None = None,
+        kind: str | None = None,
+        storage: str | None = None,
+        fileset_id: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> Transfers:
+        params = {
+            "user": user,
+            "state": state,
+            "kind": kind,
+            "storage": storage,
+            "fileset_id": fileset_id,
+            "limit": limit,
+            "cursor": cursor,
+        }
+        return Transfers.model_validate(self._get("/transfers", params))
+
+    def allocations(self, *, user: str | None = None) -> Allocations:
+        return Allocations.model_validate(self._get("/allocations", {"user": user}))
+
     def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
-        return self._request("GET", path, params=params)
+        given = {key: value for key, value in (params or {}).items() if value is not None}
+        return self._request("GET", path, params=given or None)
 
     def _request(self, method: str, path: str, *, params: dict[str, Any] | None = None) -> Any:
         attempts = self._attempts if self.retryable(method) else 1

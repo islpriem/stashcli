@@ -47,6 +47,10 @@ def ok(payload: dict[str, Any] | None = None) -> httpx.Response:
     return httpx.Response(200, json=payload or WHOAMI, headers=HEADERS)
 
 
+def httpx2_ok() -> httpx.Response:
+    return httpx.Response(200, json={"filesets": []}, headers=HEADERS)
+
+
 def envelope(status: int, code: str, **details: Any) -> httpx.Response:
     return httpx.Response(
         status,
@@ -229,6 +233,62 @@ class TestVersions:
         assert client(handler).whoami().username == "mmustermann"
 
 
+class TestReads:
+    def test_filesets_are_listed_with_the_filters_the_caller_gave(self) -> None:
+        handler, seen = responder(httpx2_ok())
+
+        client(handler).filesets(storage="LOC2HOT", user="jdoe", state="READY")
+
+        assert seen[0].url.path == "/api/v1/filesets"
+        assert dict(seen[0].url.params) == {
+            "storage": "LOC2HOT",
+            "user": "jdoe",
+            "state": "READY",
+        }
+
+    def test_a_filter_that_was_not_given_is_not_sent(self) -> None:
+        handler, seen = responder(httpx2_ok())
+
+        client(handler).filesets(storage="LOC2HOT")
+
+        assert dict(seen[0].url.params) == {"storage": "LOC2HOT"}
+
+    def test_one_fileset_is_looked_up_by_storage_and_name(self) -> None:
+        handler, seen = responder(httpx2_ok())
+
+        client(handler).filesets(storage="LOC2HOT", name="mydir")
+
+        assert dict(seen[0].url.params) == {"storage": "LOC2HOT", "name": "mydir"}
+
+    def test_the_transfers_of_a_fileset(self) -> None:
+        handler, seen = responder(
+            httpx.Response(200, json={"transfers": [], "next_cursor": None}, headers=HEADERS)
+        )
+
+        client(handler).transfers(fileset_id=7)
+
+        assert seen[0].url.path == "/api/v1/transfers"
+        assert dict(seen[0].url.params) == {"fileset_id": "7"}
+
+    def test_allocations_of_a_user(self) -> None:
+        payload = {
+            "user": "mmustermann",
+            "total": {
+                "limit_bytes": 1,
+                "allocated_bytes": 0,
+                "used_bytes": 0,
+                "free_bytes": 1,
+            },
+            "storages": [],
+        }
+        handler, seen = responder(httpx.Response(200, json=payload, headers=HEADERS))
+
+        result = client(handler).allocations(user="jdoe")
+
+        assert dict(seen[0].url.params) == {"user": "jdoe"}
+        assert result.user == "mmustermann"
+
+
 class TestEndpoints:
     def test_whoami_returns_the_typed_model(self) -> None:
         handler, seen = responder(ok())
@@ -258,6 +318,7 @@ class TestEndpoints:
                         "daemon": "hot1",
                         "drained": False,
                         "enabled": True,
+                        "quota_enforced": False,
                     }
                 ]
             },
