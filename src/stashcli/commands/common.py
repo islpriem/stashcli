@@ -36,3 +36,17 @@ def _candidates(client: "StashClient") -> str:
     caches = [storage.id for storage in client.storages() if CACHE_ROLE in storage.roles]
     listed = ", ".join(caches) if caches else "none of the storages hold filesets"
     return f"name the storage (STORAGE:name), pass --storage, or configure one: {listed}"
+
+
+def confirm(runtime: Runtime, question: str, *, hint: str) -> None:
+    """Anything that can lose data asks first, and needs --yes off a terminal."""
+    import typer
+
+    from stashcli.errors import Aborted
+
+    if runtime.assume_yes:
+        return
+    if not runtime.output.tty:
+        raise UsageError(f"{question} This needs --yes when there is no terminal.", hint=hint)
+    if not typer.confirm(question):
+        raise Aborted("nothing was changed")
