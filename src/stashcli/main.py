@@ -6,12 +6,13 @@ its exit code. Nothing here touches the network — `stash --help` does not.
 
 import os
 import sys
+from dataclasses import replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 
-from stashcli.commands import filesets, topology
+from stashcli.commands import filesets, topology, warm
 from stashcli.config.settings import Settings, default_config_paths, resolve_settings
 from stashcli.errors import INTERRUPTED, CliError, UsageError
 from stashcli.render.output import OutputOptions
@@ -30,9 +31,12 @@ app = typer.Typer(
 fileset_app = typer.Typer(no_args_is_help=True, help="Work with filesets.")
 fileset_app.command("list")(filesets.list_filesets)
 fileset_app.command("show")(filesets.show)
+fileset_app.command("create")(warm.create)
+fileset_app.command("resize")(warm.resize)
 app.add_typer(fileset_app, name="fileset")
 app.command("list")(filesets.list_filesets)
 app.command("quota")(filesets.quota)
+app.command("warm")(warm.warm)
 app.command("whoami")(topology.whoami)
 app.command("locations")(topology.locations)
 app.command("storages")(topology.storages)
@@ -79,6 +83,14 @@ def configure(
     if ctx.invoked_subcommand is None:
         raise UsageError("no command given", hint="run stash --help to see the commands")
     if ctx.obj is not None:
+        # A caller that supplied its own runtime still gets the flags it typed.
+        runtime: Runtime = ctx.obj
+        runtime.assume_yes = runtime.assume_yes or assume_yes
+        runtime.verbosity = max(runtime.verbosity, verbose)
+        if json_output or quiet:
+            runtime.output = replace(
+                runtime.output, json=runtime.output.json or json_output, quiet=quiet
+            )
         return
     environment = dict(os.environ)
     settings = resolve_settings(
@@ -100,9 +112,24 @@ def configure(
 
 
 def report(error: CliError) -> None:
-    print(f"Error: {error.message}", file=sys.stderr)
+    # Whatever the command already printed belongs above the error, not interleaved
+    # with it: the two streams are buffered separately.
+    sys.stdout.flush()
+    code = getattr(error, "code", None)
+    print(f"Error: {error.message}" + (f" ({code})" if code else ""), file=sys.stderr)
+    numbers = getattr(error, "numbers", None)
+    if numbers and not _already_said(error.message, getattr(error, "details", {})):
+        print(numbers, file=sys.stderr)
     if error.hint:
         print(error.hint, file=sys.stderr)
+
+
+def _already_said(message: str, details: dict[str, Any]) -> bool:
+    """Servers put their numbers in the message; saying them twice is noise."""
+    from stashcli.sizes import format_bytes
+
+    required = details.get("required_bytes")
+    return isinstance(required, int) and format_bytes(required) in message
 
 
 def main(argv: list[str] | None = None, *, runtime: Runtime | None = None) -> int:

@@ -233,6 +233,16 @@ def test_starting_up_does_not_import_rich_httpx_or_pydantic() -> None:
 
 
 class TestCallbackWiring:
+    def test_a_typed_flag_reaches_a_runtime_the_caller_supplied(
+        self, runtime_for: RuntimeFor, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """--json is the contract, whoever built the runtime."""
+        import json as json_module
+
+        assert main(["--json", "whoami"], runtime=runtime_for()) == 0
+
+        assert json_module.loads(capsys.readouterr().out)["username"] == "mmustermann"
+
     def test_options_without_a_command_are_a_usage_error(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:

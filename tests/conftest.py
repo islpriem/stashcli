@@ -168,12 +168,30 @@ TRANSFERS: dict[str, Any] = {
     "next_cursor": None,
 }
 
+PREFLIGHT: dict[str, Any] = {
+    "kind": "warm",
+    "source": "HOT1:/myuser/mydirectory",
+    "target": "LOC2HOT:mydir",
+    "path": "",
+    "route": "HOT1->LOC2HOT",
+    "bytes_total": 20 * GIB,
+    "file_count": 12043,
+    "allocation_bytes": 22548578304,
+    "refresh": False,
+    "estimated_start_seconds": 240,
+    "estimated_duration_seconds": 9000,
+}
+
 Handler = Callable[[httpx.Request], httpx.Response]
 
 
 def payload_handler(payloads: dict[str, Any]) -> Handler:
     def handler(request: httpx.Request) -> httpx.Response:
         body = payloads.get(request.url.path)
+        if body is not None and request.url.path == "/api/v1/filesets":
+            wanted = request.url.params.get("name")
+            if wanted is not None:
+                body = {"filesets": [f for f in body["filesets"] if f["name"] == wanted]}
         if body is None:
             return httpx.Response(
                 404,
