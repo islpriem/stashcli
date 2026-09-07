@@ -17,3 +17,10 @@
   fileset with its transfer history; `quota`, which states where an allocation is not
   enforced by the filesystem. A bare name with no default storage lists the
   storages it could have meant instead of guessing.
+- `fileset create`, `fileset resize` and `warm`. A warm asks the server for a preflight,
+  shows it, and then submits; a refusal marks the check that failed with the server's own
+  numbers and exits with the mapped code. `--dry-run` shows the
+  preflight and submits nothing. Shrinking a fileset confirms on a terminal and needs
+  `--yes` without one.
+- Errors print the server's code and what to do next, and no longer repeat numbers the
+  server's own message already carries.

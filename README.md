@@ -11,6 +11,10 @@ stash list                        # every fileset you can see, and what you have
 stash fileset list --storage LOC2HOT --long
 stash fileset show LOC2HOT:mydir  # the record and its transfer history
 stash quota                       # limits, allocation and usage per cache
+stash fileset create LOC2HOT:results --size 500Gi
+stash fileset resize LOC2HOT:results --size 1Ti
+stash warm HOT1:/myuser/mydirectory LOC2HOT:mydir --dry-run
+stash warm HOT1:/myuser/mydirectory LOC2HOT:mydir
 ```
 
 Global options: `--server URL`, `--storage ID`, `--json`, `--no-color`, `--timeout S`,
