@@ -10,6 +10,10 @@ from stashcli import __version__
 from stashcli.auth.fake import FakeAuthProvider
 from stashcli.client.stash import StashClient
 from stashcli.errors import CliError, ServerError, TransportError
+from tests.conftest import FILESETS, PREFLIGHT, TRANSFERS
+
+FILESET = FILESETS["filesets"][0]
+TRANSFER = TRANSFERS["transfers"][0]
 
 WHOAMI = {
     "uid": 1000,
@@ -336,3 +340,79 @@ class TestEndpoints:
         assert [location.id for location in api.locations()] == ["LOC1"]
         assert [storage.id for storage in api.storages()] == ["HOT1"]
         assert api.storages()[0].roles == ["source"]
+
+
+class TestMutations:
+    def test_creating_a_fileset_posts_what_the_server_asked_for(self) -> None:
+        created = {**FILESET, "name": "results", "kind": "output"}
+        handler, seen = responder(httpx.Response(201, json=created, headers=HEADERS))
+
+        result = client(handler).create_fileset(
+            storage="LOC2HOT", name="results", size_bytes=1024
+        )
+
+        assert seen[0].method == "POST"
+        assert seen[0].url.path == "/api/v1/filesets"
+        assert json.loads(seen[0].content) == {
+            "storage": "LOC2HOT",
+            "name": "results",
+            "size_bytes": 1024,
+        }
+        assert result.name == "results"
+
+    def test_a_field_that_was_not_given_is_not_sent(self) -> None:
+        handler, seen = responder(httpx.Response(201, json=FILESET, headers=HEADERS))
+
+        client(handler).create_fileset(storage="LOC2HOT", name="abc", size_bytes=1)
+
+        assert "user" not in json.loads(seen[0].content)
+
+    def test_resizing_patches_the_fileset(self) -> None:
+        handler, seen = responder(httpx.Response(200, json=FILESET, headers=HEADERS))
+
+        client(handler).resize_fileset(7, size_bytes=2048, force=True)
+
+        assert seen[0].method == "PATCH"
+        assert seen[0].url.path == "/api/v1/filesets/7"
+        assert json.loads(seen[0].content) == {"size_bytes": 2048, "force": True}
+
+    def test_a_warm_is_submitted_as_the_server_spells_it(self) -> None:
+        transfer = {**TRANSFER, "state": "ASSIGNED"}
+        handler, seen = responder(httpx.Response(201, json=transfer, headers=HEADERS))
+
+        result = client(handler).warm(
+            source_storage="HOT1",
+            source_path="/myuser/mydirectory",
+            target_storage="LOC2HOT",
+            fileset="mydir",
+        )
+
+        assert json.loads(seen[0].content) == {
+            "kind": "warm",
+            "source": {"storage": "HOT1", "path": "/myuser/mydirectory"},
+            "target": {"storage": "LOC2HOT", "fileset": "mydir"},
+            "refresh": False,
+            "dry_run": False,
+        }
+        assert result.state == "ASSIGNED"
+
+    def test_a_dry_run_comes_back_as_a_preflight(self) -> None:
+        handler, _ = responder(httpx.Response(201, json=PREFLIGHT, headers=HEADERS))
+
+        result = client(handler).warm_preflight(
+            source_storage="HOT1",
+            source_path="/myuser/mydirectory",
+            target_storage="LOC2HOT",
+            fileset="mydir",
+        )
+
+        assert result.bytes_total == 20 * 1024**3
+        assert result.file_count == 12043
+
+    def test_a_mutation_is_never_retried(self) -> None:
+        handler, seen = responder(httpx.Response(503, headers=HEADERS))
+
+        with pytest.raises(TransportError):
+            client(handler).create_fileset(storage="LOC2HOT", name="x", size_bytes=1)
+
+        assert len(seen) == 1, "a retried create would make two filesets"

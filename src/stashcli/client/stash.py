@@ -13,13 +13,40 @@ import httpx
 from stashcli import __version__
 from stashcli.auth.provider import AuthProvider
 from stashcli.errors import CliError, ServerError, TransportError
-from stashcli.models.filesets import Allocations, Fileset, Filesets, Transfers
+from stashcli.models.filesets import (
+    Allocations,
+    Fileset,
+    Filesets,
+    Preflight,
+    Transfer,
+    Transfers,
+)
 from stashcli.models.topology import Location, Locations, Storage, Storages, WhoAmI
 
 API_PREFIX = "/api/v1"
 API_VERSION = "v1"
 RETRYABLE_METHODS = frozenset({"GET", "HEAD"})
 RETRYABLE_STATUS = frozenset({429, 502, 503, 504})
+
+
+def _warm_body(
+    source_storage: str,
+    source_path: str,
+    target_storage: str,
+    fileset: str,
+    size_bytes: int | None,
+    refresh: bool,
+    user: str | None,
+) -> dict[str, Any]:
+    return {
+        "kind": "warm",
+        "source": {"storage": source_storage, "path": source_path},
+        "target": {"storage": target_storage, "fileset": fileset},
+        "size_bytes": size_bytes,
+        "refresh": refresh,
+        "dry_run": False,
+        "user": user,
+    }
 
 
 def _ignore_warning(message: str) -> None:
@@ -109,6 +136,59 @@ class StashClient:
         }
         return Transfers.model_validate(self._get("/transfers", params))
 
+    def create_fileset(
+        self, *, storage: str, name: str, size_bytes: int, user: str | None = None
+    ) -> Fileset:
+        body = {"storage": storage, "name": name, "size_bytes": size_bytes, "user": user}
+        return Fileset.model_validate(self._post("/filesets", body))
+
+    def resize_fileset(
+        self, fileset_id: int, *, size_bytes: int, force: bool = False
+    ) -> Fileset:
+        return Fileset.model_validate(
+            self._request(
+                "PATCH",
+                f"/filesets/{fileset_id}",
+                body={"size_bytes": size_bytes, "force": force},
+            )
+        )
+
+    def warm(
+        self,
+        *,
+        source_storage: str,
+        source_path: str,
+        target_storage: str,
+        fileset: str,
+        size_bytes: int | None = None,
+        refresh: bool = False,
+        user: str | None = None,
+    ) -> Transfer:
+        answer = self._post(
+            "/transfers",
+            _warm_body(
+                source_storage, source_path, target_storage, fileset, size_bytes, refresh, user
+            ),
+        )
+        return Transfer.model_validate(answer)
+
+    def warm_preflight(
+        self,
+        *,
+        source_storage: str,
+        source_path: str,
+        target_storage: str,
+        fileset: str,
+        size_bytes: int | None = None,
+        refresh: bool = False,
+        user: str | None = None,
+    ) -> Preflight:
+        """What the server would do, without doing it."""
+        body = _warm_body(
+            source_storage, source_path, target_storage, fileset, size_bytes, refresh, user
+        )
+        return Preflight.model_validate(self._post("/transfers", {**body, "dry_run": True}))
+
     def allocations(self, *, user: str | None = None) -> Allocations:
         return Allocations.model_validate(self._get("/allocations", {"user": user}))
 
@@ -116,7 +196,18 @@ class StashClient:
         given = {key: value for key, value in (params or {}).items() if value is not None}
         return self._request("GET", path, params=given or None)
 
-    def _request(self, method: str, path: str, *, params: dict[str, Any] | None = None) -> Any:
+    def _post(self, path: str, body: dict[str, Any]) -> Any:
+        given = {key: value for key, value in body.items() if value is not None}
+        return self._request("POST", path, body=given)
+
+    def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        body: dict[str, Any] | None = None,
+    ) -> Any:
         attempts = self._attempts if self.retryable(method) else 1
         failure = TransportError("the request could not be made")
         for attempt in range(1, attempts + 1):
@@ -126,6 +217,7 @@ class StashClient:
                     method,
                     f"{API_PREFIX}{path}",
                     params=params,
+                    json=body,
                     headers={"Authorization": f"{self._auth.scheme} {self._auth.credential()}"},
                 )
             except httpx.HTTPError as error:

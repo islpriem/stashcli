@@ -75,3 +75,19 @@ class Allocations(Wire):
     user: str
     total: AllocationTotals
     storages: list[StorageAllocation]
+
+
+class Preflight(Wire):
+    """What a dry run answers: the numbers the server decided from."""
+
+    kind: str
+    source: str
+    target: str
+    path: str
+    route: str
+    bytes_total: int
+    file_count: int
+    allocation_bytes: int
+    refresh: bool
+    estimated_start_seconds: int
+    estimated_duration_seconds: int
