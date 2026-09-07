@@ -208,3 +208,17 @@ def render_quota(
             f"On {', '.join(soft)} the allocation is not enforced by the filesystem: "
             "writing past it succeeds and is reported afterwards.",
         )
+
+
+def render_fileset_created(console: Console, fileset: Fileset) -> None:
+    console.print(f"Created {fileset.reference}")
+    console.print(f"{'Path':<10} {fileset.path}")
+    console.print(f"{'Allocated':<10} {format_bytes(fileset.allocated_bytes)}")
+
+
+def render_fileset_resized(console: Console, fileset: Fileset, *, was: int) -> None:
+    console.print(
+        f"{fileset.reference} now reserves {format_bytes(fileset.allocated_bytes)} "
+        f"(was {format_bytes(was)})"
+    )
+    console.print(f"{'Path':<10} {fileset.path}")
