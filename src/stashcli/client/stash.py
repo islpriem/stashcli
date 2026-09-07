@@ -121,6 +121,7 @@ class StashClient:
         state: str | None = None,
         kind: str | None = None,
         storage: str | None = None,
+        route: str | None = None,
         fileset_id: int | None = None,
         limit: int | None = None,
         cursor: str | None = None,
@@ -130,11 +131,18 @@ class StashClient:
             "state": state,
             "kind": kind,
             "storage": storage,
+            "route": route,
             "fileset_id": fileset_id,
             "limit": limit,
             "cursor": cursor,
         }
         return Transfers.model_validate(self._get("/transfers", params))
+
+    def transfer(self, transfer_id: int) -> Transfer:
+        return Transfer.model_validate(self._get(f"/transfers/{transfer_id}"))
+
+    def cancel(self, transfer_id: int) -> Transfer:
+        return Transfer.model_validate(self._request("DELETE", f"/transfers/{transfer_id}"))
 
     def create_fileset(
         self, *, storage: str, name: str, size_bytes: int, user: str | None = None
