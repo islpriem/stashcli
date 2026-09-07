@@ -50,6 +50,45 @@ def exit_code_for(code: str) -> int:
     return _EXIT_CODES.get(code, GENERIC)
 
 
+_ADVICE = {
+    "ALLOCATION_LIMIT_EXCEEDED": (
+        "Release filesets you no longer need (stash fileset list), "
+        "or ask an admin to raise your limit."
+    ),
+    "TOTAL_ALLOCATION_LIMIT_EXCEEDED": (
+        "Release filesets on any cache (stash quota), or ask an admin to raise your limit."
+    ),
+    "STORAGE_FULL": "The storage itself is full; try another cache or wait.",
+    "OVER_ALLOCATION": (
+        "A fileset uses more than it reserved. Resize it (stash fileset resize) "
+        "or release it before allocating more."
+    ),
+    "TOO_MANY_FILESETS": "Release a fileset you no longer need first.",
+    "TOO_MANY_QUEUED": "Wait for one of your transfers to finish (stash status).",
+    "FILESET_EXISTS": (
+        "Pick another name, or refresh the existing fileset (stash warm --refresh)."
+    ),
+    "SOURCE_MISMATCH": "That name already holds another source; use a different name.",
+    "UNAUTHENTICATED": "Check that munged is running on this node.",
+    "STORAGE_DRAINED": "The storage is drained for maintenance; try again later.",
+    "DAEMON_UNAVAILABLE": "The storage daemon is not reachable; try again later.",
+}
+
+
+def explain(details: dict[str, Any]) -> str | None:
+    """The server's own numbers, said once, in the order a person reads them."""
+    if "required_bytes" not in details:
+        return None
+    from stashcli.sizes import format_bytes
+
+    where = details.get("storage") or "all caches"
+    return (
+        f"{format_bytes(int(details['required_bytes']))} needed · "
+        f"{format_bytes(int(details.get('free_bytes', 0)))} free of "
+        f"{format_bytes(int(details.get('limit_bytes', 0)))} on {where}"
+    )
+
+
 class CliError(Exception):
     exit_code = GENERIC
 
@@ -73,6 +112,10 @@ class AuthUnavailable(CliError):
         )
 
 
+class Aborted(CliError):
+    exit_code = INTERRUPTED
+
+
 class NotFoundError(CliError):
     exit_code = NOT_FOUND
 
@@ -92,4 +135,7 @@ class ServerError(CliError):
         self.code = code
         self.details = details
         self.exit_code = exit_code_for(code)
-        super().__init__(message)
+        # The message stays exactly as the server wrote it; the code is added
+        # where it is printed.
+        super().__init__(message, hint=_ADVICE.get(code))
+        self.numbers = explain(details)

@@ -83,3 +83,43 @@ def test_every_cli_error_carries_a_message_and_an_exit_code() -> None:
         assert isinstance(error, CliError)
         assert error.message
         assert error.exit_code > 0
+
+
+def test_numbers_the_server_already_said_are_not_repeated(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from stashcli.main import report
+
+    error = ServerError(
+        code="ALLOCATION_LIMIT_EXCEEDED",
+        message="21.0 GiB needed; 12.0 GiB of your 100.0 GiB limit on LOC2HOT is free",
+        details={
+            "required_bytes": 22548578304,
+            "free_bytes": 12884901888,
+            "limit_bytes": 107374182400,
+            "storage": "LOC2HOT",
+        },
+    )
+
+    report(error)
+
+    err = capsys.readouterr().err
+    assert err.count("21.0 GiB") == 1
+    assert "(ALLOCATION_LIMIT_EXCEEDED)" in err
+    assert "Release filesets" in err
+
+
+def test_a_terse_server_message_still_gets_the_numbers(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from stashcli.main import report
+
+    report(
+        ServerError(
+            code="ALLOCATION_LIMIT_EXCEEDED",
+            message="no room",
+            details={"required_bytes": 1024, "free_bytes": 0, "limit_bytes": 1024},
+        )
+    )
+
+    assert "1.0 KiB needed" in capsys.readouterr().err
