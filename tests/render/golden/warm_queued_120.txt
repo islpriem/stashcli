@@ -1,0 +1,7 @@
+Queued
+  Transfer          123456
+  Fileset           LOC2HOT:mydir  →  /cache/loc2/mmustermann/mydir
+  Route             HOT1 → LOC2HOT
+  Estimate          start ~4m · duration ~2h30m  (best effort)
+
+Track with: stash status 123456 --watch

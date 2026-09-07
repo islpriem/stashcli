@@ -1,0 +1,5 @@
+Preflight
+  ✔ source          HOT1:/myuser/mydirectory · 20.0 GiB · 12 043 files · readable
+  ✔ name            "mydir" is free on LOC2HOT
+  ✔ allocation      21.0 GiB needed · 90.0 GiB free of 200.0 GiB on LOC2HOT
+  ✔ total limit     21.0 GiB needed · 140.0 GiB free of 250.0 GiB across all caches
