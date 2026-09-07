@@ -15,10 +15,27 @@ stash fileset create LOC2HOT:results --size 500Gi
 stash fileset resize LOC2HOT:results --size 1Ti
 stash warm HOT1:/myuser/mydirectory LOC2HOT:mydir --dry-run
 stash warm HOT1:/myuser/mydirectory LOC2HOT:mydir
+stash warm HOT1:/myuser/mydirectory LOC2HOT:mydir --wait --timeout 3600
+stash status                      # your transfers
+stash status 123456 --watch       # follow one to its end
+stash queue --route HOT1->LOC2HOT # what everyone is waiting for
+stash cancel 123456               # what has already arrived stays
 ```
 
 Global options: `--server URL`, `--storage ID`, `--json`, `--no-color`, `--timeout S`,
 `-v`, `-q`, `--yes`, `--version`.
+
+## Following a transfer
+
+`--watch` on `status` and `--wait` on `warm` poll until every transfer reaches a terminal
+state: a bar on a terminal, one line per poll in a job log, nothing under `-q`. `--wait`
+exits 8 if the transfer failed, and 1 if `--timeout` ran out before it finished — the
+transfer keeps running either way. Ctrl-C detaches without cancelling and prints how to
+cancel and how to resume watching.
+
+`--interval` (on `status --watch`) sets the seconds between polls; `--timeout` on `warm`
+is how long to wait, not to be confused with the global `--timeout`, which is the
+per-request HTTP timeout.
 
 ## References
 

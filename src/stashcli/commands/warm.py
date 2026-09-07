@@ -15,7 +15,8 @@ from stashcli.sizes import parse_size
 
 if TYPE_CHECKING:
     from stashcli.client.stash import StashClient
-    from stashcli.models.filesets import Fileset
+    from stashcli.errors import CliError
+    from stashcli.models.filesets import Fileset, Transfer
 
 SizeOption = Annotated[str, typer.Option("--size", help="500Gi (1024-based) or 500G (1000).")]
 
@@ -92,6 +93,10 @@ def warm(
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Show the preflight and submit nothing.")
     ] = False,
+    wait: Annotated[bool, typer.Option("--wait", help="Follow it until it finishes.")] = False,
+    timeout: Annotated[
+        float | None, typer.Option("--timeout", help="Seconds to wait before giving up.")
+    ] = None,
     user: Annotated[str | None, typer.Option("--user", "-u", help="Admin only.")] = None,
 ) -> None:
     """Fill a fileset from a source storage."""
@@ -140,17 +145,32 @@ def warm(
             raise
         path = _path_of(client, into)
 
+    if not runtime.output.json:
+        render_preflight(console, plan, allocations, None)
+        console.print()
+        render_queued(console, transfer, plan, path)
+
+    outcome = _wait_for(runtime, transfer.id, timeout) if wait else None
     if runtime.output.json:
         emit_json(
             {
                 "preflight": plan.model_dump(mode="json"),
-                "transfer": transfer.model_dump(mode="json"),
+                "transfer": (outcome[0] if outcome else transfer).model_dump(mode="json"),
             }
         )
-        return
-    render_preflight(console, plan, allocations, None)
-    console.print()
-    render_queued(console, transfer, plan, path)
+    if outcome is not None and outcome[1] is not None:
+        raise outcome[1]
+
+
+def _wait_for(
+    runtime: Runtime, transfer_id: int, timeout: float | None
+) -> tuple["Transfer", "CliError | None"]:
+    """Follow the transfer that was just submitted to its end."""
+    from stashcli.commands.transfers import follow_to_the_end
+
+    with runtime.client() as client:
+        followed, problem = follow_to_the_end(runtime, client, [transfer_id], timeout)
+    return followed[0], problem
 
 
 def _source(runtime: Runtime, text: str) -> PathRef:

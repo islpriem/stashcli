@@ -24,3 +24,8 @@
   `--yes` without one.
 - Errors print the server's code and what to do next, and no longer repeat numbers the
   server's own message already carries.
+- `status`, `queue` and `cancel`. Each transfer id is its own request, so one failure does
+  not hide the rest and the exit code is the worst of them.
+- `--watch` on `status` and `--wait` on `warm` follow transfers to a terminal state: a
+  progress bar on a terminal, a line per poll in a job log, exit 8 on failure. Ctrl-C
+  detaches without cancelling. `--timeout` bounds a `--wait` and exits 1 when it runs out.
