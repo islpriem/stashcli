@@ -13,6 +13,12 @@ if TYPE_CHECKING:
 ClientFactory = Callable[[Settings, "Runtime"], "StashClient"]
 
 
+def _sleep(seconds: float) -> None:  # pragma: no cover - real waiting
+    import time
+
+    time.sleep(seconds)
+
+
 @dataclass
 class Runtime:
     settings: Settings
@@ -20,6 +26,8 @@ class Runtime:
     make_client: ClientFactory
     assume_yes: bool = False
     verbosity: int = 0
+    # Waiting is injected, so a test never does.
+    sleeper: Callable[[float], None] = _sleep
 
     def client(self) -> "StashClient":
         return self.make_client(self.settings, self)
