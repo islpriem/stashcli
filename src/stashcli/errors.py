@@ -91,6 +91,7 @@ def explain(details: dict[str, Any]) -> str | None:
 
 class CliError(Exception):
     exit_code = GENERIC
+    prefix = "Error: "
 
     def __init__(self, message: str, *, hint: str | None = None) -> None:
         self.message = message
@@ -110,6 +111,22 @@ class AuthUnavailable(CliError):
             f"MUNGE authentication is unavailable: {message}",
             hint=hint or "check that munged is running and its socket is readable",
         )
+
+
+class Detached(CliError):
+    """Not a failure: the user stopped watching, and the work carries on."""
+
+    exit_code = INTERRUPTED
+    prefix = ""
+
+
+class StillRunning(CliError):
+    """--wait reached its timeout. Nothing is wrong, but nothing is staged either:
+    exiting 0 would let a job script start on data that has not arrived. There is no
+    dedicated code for this, so the generic one is used."""
+
+    exit_code = GENERIC
+    prefix = ""
 
 
 class Aborted(CliError):

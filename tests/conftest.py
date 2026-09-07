@@ -243,6 +243,7 @@ def runtime_for() -> Callable[..., Runtime]:
         return Runtime(
             settings=Settings(server=SERVER, storage=storage, timeout=5.0),
             output=OutputOptions(json=json, color=False, width=width, tty=tty),
+            sleeper=lambda seconds: None,
             make_client=make_client,
         )
 

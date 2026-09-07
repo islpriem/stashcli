@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 
-from stashcli.commands import filesets, topology, warm
+from stashcli.commands import filesets, topology, transfers, warm
 from stashcli.config.settings import Settings, default_config_paths, resolve_settings
 from stashcli.errors import INTERRUPTED, CliError, UsageError
 from stashcli.render.output import OutputOptions
@@ -36,6 +36,9 @@ fileset_app.command("resize")(warm.resize)
 app.add_typer(fileset_app, name="fileset")
 app.command("list")(filesets.list_filesets)
 app.command("quota")(filesets.quota)
+app.command("status")(transfers.status)
+app.command("queue")(transfers.queue)
+app.command("cancel")(transfers.cancel)
 app.command("warm")(warm.warm)
 app.command("whoami")(topology.whoami)
 app.command("locations")(topology.locations)
@@ -116,7 +119,7 @@ def report(error: CliError) -> None:
     # with it: the two streams are buffered separately.
     sys.stdout.flush()
     code = getattr(error, "code", None)
-    print(f"Error: {error.message}" + (f" ({code})" if code else ""), file=sys.stderr)
+    print(error.prefix + error.message + (f" ({code})" if code else ""), file=sys.stderr)
     numbers = getattr(error, "numbers", None)
     if numbers and not _already_said(error.message, getattr(error, "details", {})):
         print(numbers, file=sys.stderr)
