@@ -1,0 +1,4 @@
+ID      KIND  STATE      SIZE      MOVED            SUBMITTED
+3       warm  SUBMITTED  35.0 GiB  0 B (0%)         2026-08-29 07:00
+2       warm  RUNNING    35.0 GiB  5.0 GiB (14%)    2026-08-29 07:00
+123456  warm  SUCCEEDED  35.0 GiB  35.0 GiB (100%)  2026-08-29 07:00

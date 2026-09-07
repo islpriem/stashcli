@@ -1,0 +1,3 @@
+ID  USER         KIND  STATE      ROUTE          SIZE      SUBMITTED
+3   mmustermann  warm  SUBMITTED  HOT1->LOC2HOT  35.0 GiB  2026-08-29 07:00
+2   mmustermann  warm  RUNNING    HOT1->LOC2HOT  35.0 GiB  2026-08-29 07:00
