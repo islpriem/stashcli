@@ -1,6 +1,70 @@
 {
   "components": {
     "schemas": {
+      "AllocationReport": {
+        "additionalProperties": false,
+        "properties": {
+          "offenders": {
+            "items": {
+              "$ref": "#/components/schemas/Offender"
+            },
+            "title": "Offenders",
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/AllocationRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rows",
+          "offenders"
+        ],
+        "title": "AllocationReport",
+        "type": "object"
+      },
+      "AllocationRow": {
+        "additionalProperties": false,
+        "properties": {
+          "allocated_bytes": {
+            "title": "Allocated Bytes",
+            "type": "integer"
+          },
+          "filesets": {
+            "title": "Filesets",
+            "type": "integer"
+          },
+          "limit_bytes": {
+            "title": "Limit Bytes",
+            "type": "integer"
+          },
+          "storage_id": {
+            "title": "Storage Id",
+            "type": "string"
+          },
+          "used_bytes": {
+            "title": "Used Bytes",
+            "type": "integer"
+          },
+          "user": {
+            "title": "User",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user",
+          "storage_id",
+          "allocated_bytes",
+          "used_bytes",
+          "filesets",
+          "limit_bytes"
+        ],
+        "title": "AllocationRow",
+        "type": "object"
+      },
       "AllocationTotals": {
         "additionalProperties": false,
         "properties": {
@@ -91,6 +155,26 @@
           "size_bytes"
         ],
         "title": "CreateFileset",
+        "type": "object"
+      },
+      "DrainState": {
+        "additionalProperties": false,
+        "description": "What an admin changed, echoed back.",
+        "properties": {
+          "drained": {
+            "title": "Drained",
+            "type": "boolean"
+          },
+          "storage": {
+            "title": "Storage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "storage",
+          "drained"
+        ],
+        "title": "DrainState",
         "type": "object"
       },
       "Driver": {
@@ -513,6 +597,40 @@
         "title": "Locations",
         "type": "object"
       },
+      "Offender": {
+        "additionalProperties": false,
+        "properties": {
+          "allocated_bytes": {
+            "title": "Allocated Bytes",
+            "type": "integer"
+          },
+          "fileset": {
+            "title": "Fileset",
+            "type": "string"
+          },
+          "storage_id": {
+            "title": "Storage Id",
+            "type": "string"
+          },
+          "used_bytes": {
+            "title": "Used Bytes",
+            "type": "integer"
+          },
+          "user": {
+            "title": "User",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user",
+          "storage_id",
+          "fileset",
+          "allocated_bytes",
+          "used_bytes"
+        ],
+        "title": "Offender",
+        "type": "object"
+      },
       "PathRef": {
         "additionalProperties": false,
         "properties": {
@@ -615,6 +733,21 @@
           "size_bytes"
         ],
         "title": "ResizeFileset",
+        "type": "object"
+      },
+      "SetLimit": {
+        "additionalProperties": false,
+        "properties": {
+          "allocation_limit_bytes": {
+            "minimum": 0.0,
+            "title": "Allocation Limit Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "allocation_limit_bytes"
+        ],
+        "title": "SetLimit",
         "type": "object"
       },
       "Storage": {
@@ -790,12 +923,58 @@
         "title": "Storages",
         "type": "object"
       },
+      "SubmitFlush": {
+        "additionalProperties": false,
+        "description": "A fileset written back out to a source storage.",
+        "properties": {
+          "dry_run": {
+            "default": false,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "keep": {
+            "default": false,
+            "title": "Keep",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "flush",
+            "title": "Kind",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/FilesetRef"
+          },
+          "target": {
+            "$ref": "#/components/schemas/PathRef"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User"
+          }
+        },
+        "required": [
+          "kind",
+          "source",
+          "target"
+        ],
+        "title": "SubmitFlush",
+        "type": "object"
+      },
       "SubmitRelease": {
         "additionalProperties": false,
+        "description": "Deleting a fileset. An output fileset needs ``discard`` to say so.",
         "properties": {
-          "force": {
+          "discard": {
             "default": false,
-            "title": "Force",
+            "title": "Discard",
             "type": "boolean"
           },
           "kind": {
@@ -1107,6 +1286,101 @@
           "next_cursor"
         ],
         "title": "Transfers",
+        "type": "object"
+      },
+      "UsageGroup": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes_transferred": {
+            "title": "Bytes Transferred",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "mean_queue_wait_seconds": {
+            "title": "Mean Queue Wait Seconds",
+            "type": "number"
+          },
+          "mean_throughput_bytes_per_s": {
+            "title": "Mean Throughput Bytes Per S",
+            "type": "number"
+          },
+          "p95_queue_wait_seconds": {
+            "title": "P95 Queue Wait Seconds",
+            "type": "number"
+          },
+          "succeeded": {
+            "title": "Succeeded",
+            "type": "integer"
+          },
+          "success_rate": {
+            "title": "Success Rate",
+            "type": "number"
+          },
+          "transfers": {
+            "title": "Transfers",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "bytes_transferred",
+          "transfers",
+          "succeeded",
+          "success_rate",
+          "mean_queue_wait_seconds",
+          "p95_queue_wait_seconds",
+          "mean_throughput_bytes_per_s"
+        ],
+        "title": "UsageGroup",
+        "type": "object"
+      },
+      "UsageReport": {
+        "additionalProperties": false,
+        "properties": {
+          "group_by": {
+            "title": "Group By",
+            "type": "string"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/UsageGroup"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          }
+        },
+        "required": [
+          "group_by",
+          "since",
+          "until",
+          "groups"
+        ],
+        "title": "UsageReport",
         "type": "object"
       },
       "ValidationError": {
@@ -1943,6 +2217,463 @@
         "summary": "Limits"
       }
     },
+    "/api/v1/limits/{user}": {
+      "delete": {
+        "operationId": "clear_total_limit_api_v1_limits__user__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user",
+            "required": true,
+            "schema": {
+              "title": "User",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "The request could not be understood."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No valid credential."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not permitted."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No such object."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Refused by a rule: a limit, a state, or a conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected failure."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "A storage or daemon is unavailable."
+          }
+        },
+        "summary": "Clear Total Limit"
+      },
+      "put": {
+        "description": "The cluster-wide limit: what the user may hold across all caches.",
+        "operationId": "set_total_limit_api_v1_limits__user__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user",
+            "required": true,
+            "schema": {
+              "title": "User",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLimit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Limit"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "The request could not be understood."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No valid credential."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not permitted."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No such object."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Refused by a rule: a limit, a state, or a conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected failure."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "A storage or daemon is unavailable."
+          }
+        },
+        "summary": "Set Total Limit"
+      }
+    },
+    "/api/v1/limits/{user}/{storage_id}": {
+      "delete": {
+        "operationId": "clear_storage_limit_api_v1_limits__user___storage_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user",
+            "required": true,
+            "schema": {
+              "title": "User",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "storage_id",
+            "required": true,
+            "schema": {
+              "title": "Storage Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "The request could not be understood."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No valid credential."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not permitted."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No such object."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Refused by a rule: a limit, a state, or a conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected failure."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "A storage or daemon is unavailable."
+          }
+        },
+        "summary": "Clear Storage Limit"
+      },
+      "put": {
+        "operationId": "set_storage_limit_api_v1_limits__user___storage_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user",
+            "required": true,
+            "schema": {
+              "title": "User",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "storage_id",
+            "required": true,
+            "schema": {
+              "title": "Storage Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLimit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Limit"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "The request could not be understood."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No valid credential."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not permitted."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No such object."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Refused by a rule: a limit, a state, or a conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected failure."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "A storage or daemon is unavailable."
+          }
+        },
+        "summary": "Set Storage Limit"
+      }
+    },
     "/api/v1/locations": {
       "get": {
         "operationId": "locations_api_v1_locations_get",
@@ -2031,6 +2762,240 @@
         "summary": "Locations"
       }
     },
+    "/api/v1/reports/allocation": {
+      "get": {
+        "description": "Who holds what, and whose filesets are past what they reserved.",
+        "operationId": "allocation_api_v1_reports_allocation_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "The request could not be understood."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No valid credential."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not permitted."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No such object."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Refused by a rule: a limit, a state, or a conflict."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected failure."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "A storage or daemon is unavailable."
+          }
+        },
+        "summary": "Allocation"
+      }
+    },
+    "/api/v1/reports/usage": {
+      "get": {
+        "description": "What was moved in a window, grouped as asked.",
+        "operationId": "usage_api_v1_reports_usage_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "default": "user",
+              "title": "Group By",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Until"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "The request could not be understood."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No valid credential."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not permitted."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No such object."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Refused by a rule: a limit, a state, or a conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected failure."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "A storage or daemon is unavailable."
+          }
+        },
+        "summary": "Usage"
+      }
+    },
     "/api/v1/storages": {
       "get": {
         "operationId": "storages_api_v1_storages_get",
@@ -2117,6 +3082,225 @@
           }
         },
         "summary": "Storages"
+      }
+    },
+    "/api/v1/storages/{storage_id}/drain": {
+      "post": {
+        "description": "No new dispatches and no new filesets; what is running finishes.",
+        "operationId": "drain_storage_api_v1_storages__storage_id__drain_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storage_id",
+            "required": true,
+            "schema": {
+              "title": "Storage Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DrainState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "The request could not be understood."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No valid credential."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not permitted."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No such object."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Refused by a rule: a limit, a state, or a conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected failure."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "A storage or daemon is unavailable."
+          }
+        },
+        "summary": "Drain Storage"
+      }
+    },
+    "/api/v1/storages/{storage_id}/undrain": {
+      "post": {
+        "operationId": "undrain_storage_api_v1_storages__storage_id__undrain_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storage_id",
+            "required": true,
+            "schema": {
+              "title": "Storage Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DrainState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "The request could not be understood."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No valid credential."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not permitted."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "No such object."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Refused by a rule: a limit, a state, or a conflict."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unexpected failure."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "A storage or daemon is unavailable."
+          }
+        },
+        "summary": "Undrain Storage"
       }
     },
     "/api/v1/transfers": {
@@ -2345,7 +3529,7 @@
         "summary": "List Transfers"
       },
       "post": {
-        "description": "Submit a warm or a release. A release runs synchronously.",
+        "description": "Submit a warm, a flush or a release. A release runs synchronously.",
         "operationId": "submit_transfer_api_v1_transfers_post",
         "requestBody": {
           "content": {
@@ -2353,12 +3537,16 @@
               "schema": {
                 "discriminator": {
                   "mapping": {
+                    "flush": "#/components/schemas/SubmitFlush",
                     "release": "#/components/schemas/SubmitRelease",
                     "warm": "#/components/schemas/SubmitWarm"
                   },
                   "propertyName": "kind"
                 },
                 "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/SubmitFlush"
+                  },
                   {
                     "$ref": "#/components/schemas/SubmitRelease"
                   },
