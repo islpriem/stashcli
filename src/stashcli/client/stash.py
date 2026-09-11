@@ -13,6 +13,12 @@ import httpx
 from stashcli import __version__
 from stashcli.auth.provider import AuthProvider
 from stashcli.errors import CliError, ServerError, TransportError
+from stashcli.models.admin import (
+    AllocationReport,
+    DrainState,
+    Limit,
+    UsageReport,
+)
 from stashcli.models.filesets import (
     Allocations,
     Fileset,
@@ -47,6 +53,10 @@ def _warm_body(
         "dry_run": False,
         "user": user,
     }
+
+
+def _limit_path(user: str, storage: str | None) -> str:
+    return f"/limits/{user}/{storage}" if storage else f"/limits/{user}"
 
 
 def _ignore_warning(message: str) -> None:
@@ -196,6 +206,67 @@ class StashClient:
             source_storage, source_path, target_storage, fileset, size_bytes, refresh, user
         )
         return Preflight.model_validate(self._post("/transfers", {**body, "dry_run": True}))
+
+    def flush(
+        self,
+        *,
+        storage: str,
+        fileset: str,
+        target_storage: str,
+        target_path: str,
+        keep: bool = False,
+        user: str | None = None,
+    ) -> Transfer:
+        """Write a fileset out to a path on a source storage."""
+        body = {
+            "kind": "flush",
+            "source": {"storage": storage, "fileset": fileset},
+            "target": {"storage": target_storage, "path": target_path},
+            "keep": keep,
+            "user": user,
+        }
+        return Transfer.model_validate(self._post("/transfers", body))
+
+    def release(
+        self, *, storage: str, fileset: str, discard: bool = False, user: str | None = None
+    ) -> Transfer:
+        """Delete a fileset. The server decides what may be lost without a flush."""
+        body: dict[str, Any] = {
+            "kind": "release",
+            "target": {"storage": storage, "fileset": fileset},
+            "user": user,
+        }
+        if discard:
+            body["discard"] = True
+        return Transfer.model_validate(self._post("/transfers", body))
+
+    def set_limit(
+        self, *, user: str, storage: str | None, allocation_limit_bytes: int
+    ) -> Limit:
+        """Admin only; the server says so if the caller is not one."""
+        return Limit.model_validate(
+            self._request(
+                "PUT",
+                _limit_path(user, storage),
+                body={"allocation_limit_bytes": allocation_limit_bytes},
+            )
+        )
+
+    def clear_limit(self, *, user: str, storage: str | None) -> None:
+        self._request("DELETE", _limit_path(user, storage))
+
+    def drain(self, storage: str, *, drained: bool) -> DrainState:
+        verb = "drain" if drained else "undrain"
+        return DrainState.model_validate(self._post(f"/storages/{storage}/{verb}", {}))
+
+    def usage_report(
+        self, *, group_by: str, since: str | None = None, until: str | None = None
+    ) -> UsageReport:
+        params = {"group_by": group_by, "since": since, "until": until}
+        return UsageReport.model_validate(self._get("/reports/usage", params))
+
+    def allocation_report(self) -> AllocationReport:
+        return AllocationReport.model_validate(self._get("/reports/allocation"))
 
     def allocations(self, *, user: str | None = None) -> Allocations:
         return Allocations.model_validate(self._get("/allocations", {"user": user}))
