@@ -60,8 +60,10 @@ _ADVICE = {
     ),
     "STORAGE_FULL": "The storage itself is full; try another cache or wait.",
     "OVER_ALLOCATION": (
-        "A fileset uses more than it reserved. Resize it (stash fileset resize) "
-        "or release it before allocating more."
+        # Growing the fileset would allocate, which is the thing being refused, so
+        # resizing is not a way out of this one.
+        "A fileset uses more than it reserved. Delete what is inside it, or release it "
+        "(stash release), and it clears at the next usage check."
     ),
     "TOO_MANY_FILESETS": "Release a fileset you no longer need first.",
     "TOO_MANY_QUEUED": "Wait for one of your transfers to finish (stash status).",

@@ -123,3 +123,17 @@ def test_a_terse_server_message_still_gets_the_numbers(
     )
 
     assert "1.0 KiB needed" in capsys.readouterr().err
+
+
+class TestAdviceThatWorks:
+    def test_over_allocation_does_not_advise_a_resize(self) -> None:
+        """The server refuses a grow while a fileset is over: growing allocates."""
+        from stashcli.errors import ServerError
+
+        error = ServerError(
+            code="OVER_ALLOCATION", message="mydir uses more than it reserved", details={}
+        )
+
+        assert error.hint is not None
+        assert "resize" not in error.hint.lower()
+        assert "delete" in error.hint.lower() or "release" in error.hint.lower()
