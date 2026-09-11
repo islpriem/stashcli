@@ -83,3 +83,41 @@ class TestInstallingIt:
 
         assert "install_completion" in names
         assert "show_completion" in names
+
+
+class TestTheShippedScripts:
+    @pytest.mark.parametrize("shell", ["bash", "zsh", "fish"])
+    def test_a_completion_script_is_produced_for_each_shell(self, shell: str) -> None:
+        from typer._completion_shared import get_completion_script
+
+        script = get_completion_script(
+            prog_name="stash", complete_var="_STASH_COMPLETE", shell=shell
+        )
+
+        assert "_STASH_COMPLETE" in script
+        assert "stash" in script
+
+    def test_the_shells_own_invocation_answers(self) -> None:
+        """What a shell actually runs: the completion variable, and nothing else."""
+        import os
+        import pathlib
+        import subprocess
+        import sys
+
+        stash = pathlib.Path(sys.executable).with_name("stash")
+        if not stash.exists():  # pragma: no cover - needs an installed console script
+            pytest.skip("the stash console script is not installed in this environment")
+        answered = subprocess.run(
+            [str(stash)],
+            capture_output=True,
+            text=True,
+            env={
+                **os.environ,
+                "_STASH_COMPLETE": "complete_bash",
+                "COMP_WORDS": "stash sta",
+                "COMP_CWORD": "1",
+            },
+        )
+
+        assert answered.returncode == 0
+        assert "status" in answered.stdout

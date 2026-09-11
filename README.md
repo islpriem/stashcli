@@ -20,10 +20,39 @@ stash status                      # your transfers
 stash status 123456 --watch       # follow one to its end
 stash queue --route HOT1->LOC2HOT # what everyone is waiting for
 stash cancel 123456               # what has already arrived stays
+stash path LOC2HOT:mydir          # one line: where the data is
+stash cool LOC2HOT:results --to HOT1:/myuser/out   # write it out, then release it
+stash cool LOC2HOT:mydir          # a cached fileset is just released
+stash release LOC2HOT:results --force              # release without writing anything out
+```
+
+Administration, for those the server considers admins:
+
+```bash
+stash admin limit set jdoe LOC2HOT 500Gi
+stash admin limit unset jdoe LOC2HOT
+stash admin report usage --group-by route --since 2026-08-01
+stash admin report allocation
+stash admin drain LOC2HOT
+stash admin undrain LOC2HOT
 ```
 
 Global options: `--server URL`, `--storage ID`, `--json`, `--no-color`, `--timeout S`,
 `-v`, `-q`, `--yes`, `--version`.
+
+## Letting a fileset go
+
+`stash cool` is the umbrella verb, and it is deliberately hard to lose data with:
+
+| What you type                        | Cached fileset          | Output fileset                        |
+| ------------------------------------ | ----------------------- | ------------------------------------- |
+| `stash cool F`                       | Released.               | **Refused** — needs `--to` or `--discard`. |
+| `stash cool F --to STORAGE:/path`    | Allowed.                | Written out, then released.           |
+| `... --keep`                         | Kept after writing out. | Kept after writing out.               |
+| `stash release F [--force]`          | The destructive half, said plainly.               ||
+
+The refusal comes from the server, not from this client. Anything that deletes asks
+first on a terminal and needs `--yes` without one.
 
 ## Following a transfer
 
@@ -74,6 +103,17 @@ Input accepts both suffix families and they differ: `500Gi` is 500 · 1024³, `5
 | 7    | Server or storage unavailable   |
 | 8    | Transfer failed (with `--wait`) |
 | 130  | Interrupted                     |
+
+## Completion and the man page
+
+```bash
+stash --install-completion     # for the current shell
+stash --show-completion        # print it instead
+man -l docs/stash.1            # the man page, before it is installed
+```
+
+Storage ids and fileset names are completed from the server. Completion never blocks:
+one attempt, a short timeout, and nothing offered if the server cannot be reached.
 
 ## Development
 
