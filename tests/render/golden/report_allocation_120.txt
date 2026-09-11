@@ -1,0 +1,6 @@
+USER         STORAGE  LIMIT      ALLOCATED  USED      FILESETS
+mmustermann  LOC2HOT  200.0 GiB  100.0 GiB  60.0 GiB  3
+
+Past their allocation
+USER  FILESET         ALLOCATED  USED
+jdoe  LOC2HOT:toobig  1.0 GiB    3.0 GiB

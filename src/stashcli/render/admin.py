@@ -19,7 +19,9 @@ def render_usage_report(console: Console, report: UsageReport) -> None:
     if not report.groups:
         console.print("Nothing was transferred in that window.")
         return
-    grid = table(report.group_by.upper(), "MOVED", "TRANSFERS", "OK", "WAIT p95", "THROUGHPUT")
+    grid = table(
+        report.group_by.upper(), "MOVED", "TRANSFERS", "SUCCESS", "WAIT p95", "THROUGHPUT"
+    )
     for group in report.groups:
         grid.add_row(
             group.key,

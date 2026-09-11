@@ -1,0 +1,3 @@
+USER         MOVED     TRANSFERS  SUCCESS  WAIT p95  THROUGHPUT
+mmustermann  42.0 GiB  7          86%      240s      119.2 MiB/s
+jdoe         0 B       1          0%       0s        0 B/s

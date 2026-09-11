@@ -1,0 +1,7 @@
+Queued
+  Transfer          8
+  Writing out       LOC2HOT:results  →  HOT1:/myuser/out
+  Size              35.0 GiB
+  Afterwards        the fileset is released
+
+Track with: stash status 8 --watch
