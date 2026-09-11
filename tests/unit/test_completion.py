@@ -133,6 +133,8 @@ class TestBeingFastEnoughForAShell:
     def test_it_waits_only_briefly(self, served: Any) -> None:
         served()
 
-        client = completion._client()
-        with client:  # type: ignore[union-attr]
-            assert client._client.timeout.connect <= completion.TIMEOUT  # type: ignore[union-attr]
+        with completion._client() as client:
+            connect = client._client.timeout.connect
+
+        assert connect is not None
+        assert connect <= completion.TIMEOUT

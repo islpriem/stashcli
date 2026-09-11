@@ -31,7 +31,8 @@ def server(**routes: Any) -> tuple[Any, list[httpx.Request]]:
         if isinstance(answer, httpx.Response):
             return answer
         if callable(answer):
-            return answer(request)
+            answered: httpx.Response = answer(request)
+            return answered
         return httpx.Response(200, json=answer, headers=HEADERS)
 
     return handler, seen
