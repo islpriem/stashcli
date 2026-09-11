@@ -29,3 +29,17 @@
 - `--watch` on `status` and `--wait` on `warm` follow transfers to a terminal state: a
   progress bar on a terminal, a line per poll in a job log, exit 8 on failure. Ctrl-C
   detaches without cancelling. `--timeout` bounds a `--wait` and exits 1 when it runs out.
+- `stash path`: the absolute path on stdout, one line, nothing else, and exit 4 when
+  there is nothing worth printing — including a fileset that is not READY yet, so a job
+  script can branch on it.
+- `cool` and `release`. `cool --to STORAGE:/path` writes a fileset out and releases it
+  unless `--keep`; without `--to` it releases. What may be released without a flush stays
+  the server's rule: the CLI passes `--discard` on and renders the refusal.
+  Both confirm on a terminal and need `--yes` without one.
+- `stash admin`: `limit set` / `limit unset`, `report usage` / `report allocation`, and
+  `drain` / `undrain`. Admin rights are the server's
+  decision; the client asks and renders what comes back.
+- Shell completion, with storage ids and fileset names fetched from the server, and a man
+  page shipped in the wheel as `share/man/man1/stash.1`. Completion makes one
+  attempt with a short timeout and offers nothing rather than failing, so a prompt never
+  hangs on an unreachable controller.
