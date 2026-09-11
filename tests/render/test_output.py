@@ -35,3 +35,28 @@ def test_no_color_in_the_environment_is_honoured(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setenv("NO_COLOR", "1")
 
     assert not OutputOptions.detect(json=False, no_color=False, quiet=False, stream=Tty()).color
+
+
+class TestTextTheServerChose:
+    """Paths and messages come from the server; none of it is markup."""
+
+    def test_a_path_with_brackets_is_printed_as_it_is(self) -> None:
+        stream = io.StringIO()
+        console = OutputOptions(color=False, width=80, tty=False).console(stream)
+
+        console.print("/data/[test]/x")
+
+        assert stream.getvalue() == "/data/[test]/x\n"
+
+    def test_a_bracket_in_a_table_cell_survives_too(self) -> None:
+        from stashcli.render.filesets import table
+        from stashcli.render.output import print_block
+
+        stream = io.StringIO()
+        console = OutputOptions(color=False, width=80, tty=False).console(stream)
+        grid = table("PATH")
+        grid.add_row("/data/[bold]x[/bold]")
+
+        print_block(console, grid)
+
+        assert "[bold]x[/bold]" in stream.getvalue()

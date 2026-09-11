@@ -55,6 +55,9 @@ class OutputOptions:
             no_color=not self.color,
             highlight=False,
             soft_wrap=False,
+            # Everything printed here comes from the server: a path with brackets in it
+            # is a path, not markup. Styling is applied by the renderers, never parsed.
+            markup=False,
         )
 
 
