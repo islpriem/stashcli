@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Annotated
 
 import typer
 
+from stashcli.commands.common import FilesetArgument, StorageOption
 from stashcli.errors import NotFoundError
 from stashcli.runtime import Runtime
 
@@ -23,7 +24,6 @@ class Kind(StrEnum):
     OUTPUT = "output"
 
 
-StorageOption = Annotated[str | None, typer.Option("--storage", "-s", help="One storage.")]
 UserOption = Annotated[str | None, typer.Option("--user", "-u", help="Whose filesets.")]
 
 
@@ -69,7 +69,7 @@ def list_filesets(
 
 def show(
     ctx: typer.Context,
-    fileset: Annotated[str, typer.Argument(help="STORAGE:name, or a bare name.")],
+    fileset: FilesetArgument,
     user: UserOption = None,
 ) -> None:
     """Show one fileset: where it is, what it holds, and what happened to it."""
@@ -99,7 +99,7 @@ def show(
 
 def path(
     ctx: typer.Context,
-    fileset: Annotated[str, typer.Argument(help="STORAGE:name, or a bare name.")],
+    fileset: FilesetArgument,
     user: UserOption = None,
 ) -> None:
     """Print where a fileset is, and nothing else.

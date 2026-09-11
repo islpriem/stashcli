@@ -1,10 +1,25 @@
 """What more than one command needs: turning an argument into a reference."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
+import typer
+
+from stashcli.completion import complete_fileset, complete_storage
 from stashcli.errors import UsageError
 from stashcli.refs import FilesetRef, PathRef, parse_reference
 from stashcli.runtime import Runtime
+
+FilesetArgument = Annotated[
+    str,
+    typer.Argument(help="STORAGE:name, or a bare name.", autocompletion=complete_fileset),
+]
+StorageArgument = Annotated[
+    str, typer.Argument(help="Which storage.", autocompletion=complete_storage)
+]
+StorageOption = Annotated[
+    str | None,
+    typer.Option("--storage", "-s", help="One storage.", autocompletion=complete_storage),
+]
 
 if TYPE_CHECKING:
     from stashcli.client.stash import StashClient

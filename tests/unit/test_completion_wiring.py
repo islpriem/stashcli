@@ -1,0 +1,85 @@
+"""The commands hand the shell the right completer.
+
+Checked by what each one answers against a fake server, not by identity: Typer wraps
+the callback it was given.
+"""
+
+from typing import Any
+
+import httpx
+import pytest
+from typer.main import get_command
+
+from stashcli import completion
+from stashcli.auth.fake import FakeAuthProvider
+from stashcli.main import app
+from tests.conftest import ALL_PAYLOADS, payload_handler
+
+STORAGES = {"HOT1", "LOC2HOT"}
+FILESETS = {"LOC2HOT:abc", "LOC2HOT:results"}
+
+
+@pytest.fixture(autouse=True)
+def served(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        completion, "_transport", lambda: httpx.MockTransport(payload_handler(ALL_PAYLOADS))
+    )
+    monkeypatch.setattr(completion, "_auth", FakeAuthProvider)
+    monkeypatch.setenv("STASH_SERVER", "http://controller:8000")
+    monkeypatch.delenv("STASH_STORAGE", raising=False)
+
+
+def parameters(*path: str) -> dict[str, Any]:
+    found: Any = get_command(app)
+    for name in path:
+        found = found.commands[name]
+    return {parameter.name: parameter for parameter in found.params}
+
+
+def offered(parameter: Any) -> set[str]:
+    """What the shell would show: Typer hands back completion items, not strings."""
+    answered = parameter._custom_shell_complete(None, parameter, "")
+    return {getattr(item, "value", item) for item in answered}
+
+
+class TestWhatCompletesWhat:
+    @pytest.mark.parametrize(
+        ("path", "argument"),
+        [
+            (("path",), "fileset"),
+            (("cool",), "fileset"),
+            (("release",), "fileset"),
+            (("fileset", "show"), "fileset"),
+            (("fileset", "resize"), "fileset"),
+        ],
+    )
+    def test_a_fileset_argument_offers_fileset_names(
+        self, path: tuple[str, ...], argument: str
+    ) -> None:
+        assert offered(parameters(*path)[argument]) == FILESETS
+
+    @pytest.mark.parametrize(
+        ("path", "argument"),
+        [(("admin", "drain"), "storage"), (("admin", "undrain"), "storage")],
+    )
+    def test_a_storage_argument_offers_storage_ids(
+        self, path: tuple[str, ...], argument: str
+    ) -> None:
+        assert offered(parameters(*path)[argument]) == STORAGES
+
+    def test_the_storage_option_offers_them_too(self) -> None:
+        assert offered(parameters("list")["storage"]) == STORAGES
+
+    def test_a_size_is_not_completed_from_the_server(self) -> None:
+        """Only names come from the server; anything else would be guesswork."""
+        size = parameters("fileset", "create")["size"]
+
+        assert getattr(size, "_custom_shell_complete", None) is None
+
+
+class TestInstallingIt:
+    def test_the_app_offers_to_install_completion(self) -> None:
+        names = {parameter.name for parameter in get_command(app).params}
+
+        assert "install_completion" in names
+        assert "show_completion" in names

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Annotated
 
 import typer
 
+from stashcli.commands.common import FilesetArgument
 from stashcli.errors import UsageError
 from stashcli.runtime import Runtime
 
@@ -22,7 +23,7 @@ ToOption = Annotated[
 
 def cool(
     ctx: typer.Context,
-    fileset: Annotated[str, typer.Argument(help="STORAGE:name, or a bare name.")],
+    fileset: FilesetArgument,
     to: ToOption = None,
     keep: Annotated[
         bool, typer.Option("--keep", help="Keep the fileset after writing it out.")
@@ -92,7 +93,7 @@ def cool(
 
 def release(
     ctx: typer.Context,
-    fileset: Annotated[str, typer.Argument(help="STORAGE:name, or a bare name.")],
+    fileset: FilesetArgument,
     force: Annotated[
         bool, typer.Option("--force", help="Release even what was never written out.")
     ] = False,

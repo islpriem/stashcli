@@ -9,6 +9,7 @@ from typing import Annotated
 
 import typer
 
+from stashcli.commands.common import StorageArgument
 from stashcli.errors import UsageError
 from stashcli.runtime import Runtime
 
@@ -115,17 +116,13 @@ def report_allocation(ctx: typer.Context) -> None:
 
 
 @admin_app.command("drain")
-def drain(
-    ctx: typer.Context, storage: Annotated[str, typer.Argument(help="Which storage.")]
-) -> None:
+def drain(ctx: typer.Context, storage: StorageArgument) -> None:
     """Stop new work on a storage. What is running finishes."""
     _set_drain(ctx, storage, drained=True)
 
 
 @admin_app.command("undrain")
-def undrain(
-    ctx: typer.Context, storage: Annotated[str, typer.Argument(help="Which storage.")]
-) -> None:
+def undrain(ctx: typer.Context, storage: StorageArgument) -> None:
     """Let a storage take work again."""
     _set_drain(ctx, storage, drained=False)
 

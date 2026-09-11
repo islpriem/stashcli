@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Annotated
 
 import typer
 
+from stashcli.commands.common import FilesetArgument
 from stashcli.errors import NotFoundError, ServerError, UsageError
 from stashcli.refs import FilesetRef, PathRef, parse_reference
 from stashcli.runtime import Runtime
@@ -48,7 +49,7 @@ def create(
 
 def resize(
     ctx: typer.Context,
-    fileset: Annotated[str, typer.Argument(help="STORAGE:name, or a bare name.")],
+    fileset: FilesetArgument,
     size: SizeOption,
     force: Annotated[
         bool, typer.Option("--force", help="Admin only: shrink below what is used.")

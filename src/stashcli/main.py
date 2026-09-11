@@ -24,7 +24,8 @@ if TYPE_CHECKING:
     from stashcli.client.stash import StashClient
 
 app = typer.Typer(
-    add_completion=False,
+    # Completion is part of the deliverable.
+    add_completion=True,
     no_args_is_help=True,
     # Failures leave through main() as a message and an exit code, never as a traceback.
     pretty_exceptions_enable=False,
