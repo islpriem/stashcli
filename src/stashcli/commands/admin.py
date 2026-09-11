@@ -11,6 +11,7 @@ import typer
 
 from stashcli.commands.common import StorageArgument
 from stashcli.errors import UsageError
+from stashcli.refs import validate_storage_id, validate_user_name
 from stashcli.runtime import Runtime
 
 limit_app = typer.Typer(no_args_is_help=True, help="Per-user allocation limits.")
@@ -40,7 +41,10 @@ def limit_set(
     from stashcli.sizes import parse_size
 
     runtime: Runtime = ctx.obj
+    validate_user_name(user)
     storage, size = (first, second) if second is not None else (None, first)
+    if storage is not None:
+        validate_storage_id(storage)
     with runtime.client() as client:
         limit = client.set_limit(
             user=user, storage=storage, allocation_limit_bytes=parse_size(size)
@@ -64,6 +68,9 @@ def limit_unset(
     from stashcli.render.output import emit_json
 
     runtime: Runtime = ctx.obj
+    validate_user_name(user)
+    if storage is not None:
+        validate_storage_id(storage)
     with runtime.client() as client:
         client.clear_limit(user=user, storage=storage)
 
@@ -131,6 +138,7 @@ def _set_drain(ctx: typer.Context, storage: str, *, drained: bool) -> None:
     from stashcli.render.output import emit_json
 
     runtime: Runtime = ctx.obj
+    validate_storage_id(storage)
     with runtime.client() as client:
         state = client.drain(storage, drained=drained)
 

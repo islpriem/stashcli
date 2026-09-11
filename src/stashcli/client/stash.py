@@ -56,6 +56,7 @@ def _warm_body(
 
 
 def _limit_path(user: str, storage: str | None) -> str:
+    """Names are validated by the command layer before they get here (refs.py)."""
     return f"/limits/{user}/{storage}" if storage else f"/limits/{user}"
 
 

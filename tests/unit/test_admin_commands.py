@@ -279,3 +279,37 @@ class TestDrain:
 
         assert code == 4
         assert "no storage named NOPE" in capsys.readouterr().err
+
+
+class TestArgumentsStayArguments:
+    """A name is one path segment of a URL: without checking, `../x` reaches another
+    endpoint entirely, and the CLI sends a request the user never asked for."""
+
+    @pytest.mark.parametrize(
+        "argv",
+        [
+            ["admin", "limit", "set", "../storages/LOC2HOT/drain", "5Gi"],
+            ["admin", "limit", "set", "a/b", "LOC2HOT", "5Gi"],
+            ["admin", "limit", "unset", "../../whoami"],
+            ["admin", "limit", "set", "jdoe", "../../whoami", "5Gi"],
+        ],
+    )
+    def test_a_name_that_could_redirect_the_request_is_a_usage_error(
+        self, runtime_for: RuntimeFor, argv: list[str]
+    ) -> None:
+        handler, seen = server()
+
+        code = main(argv, runtime=runtime_for(handler))
+
+        assert code == 2
+        assert seen == [], "nothing was sent"
+
+    def test_a_storage_name_that_could_redirect_the_request_is_refused(
+        self, runtime_for: RuntimeFor
+    ) -> None:
+        handler, seen = server()
+
+        code = main(["admin", "drain", "../../whoami"], runtime=runtime_for(handler))
+
+        assert code == 2
+        assert seen == []

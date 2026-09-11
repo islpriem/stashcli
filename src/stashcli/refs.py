@@ -12,6 +12,9 @@ from stashcli.errors import UsageError
 
 STORAGE_ID = re.compile(r"^[A-Z][A-Z0-9_-]{0,31}$")
 FILESET_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+# POSIX portable usernames. A name is one path segment of a request URL, so anything
+# outside this would let an argument point the request somewhere else entirely.
+USER_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,6 +33,22 @@ class FilesetRef:
 
     def __str__(self) -> str:
         return f"{self.storage}:{self.name}"
+
+
+def validate_storage_id(text: str) -> str:
+    if not STORAGE_ID.match(text):
+        raise UsageError(
+            f"{text!r} is not a storage id", hint=f"storage ids look like {STORAGE_ID.pattern}"
+        )
+    return text
+
+
+def validate_user_name(text: str) -> str:
+    if not USER_NAME.match(text):
+        raise UsageError(
+            f"{text!r} is not a user name", hint=f"user names look like {USER_NAME.pattern}"
+        )
+    return text
 
 
 def parse_reference(text: str, *, default_storage: str | None = None) -> PathRef | FilesetRef:
