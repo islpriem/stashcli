@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 
+from stashcli.commands import admin as admin_commands
+from stashcli.commands import cool as cool_commands
 from stashcli.commands import filesets, topology, transfers, warm
 from stashcli.config.settings import Settings, default_config_paths, resolve_settings
 from stashcli.errors import INTERRUPTED, CliError, UsageError
@@ -36,13 +38,17 @@ fileset_app.command("resize")(warm.resize)
 app.add_typer(fileset_app, name="fileset")
 app.command("list")(filesets.list_filesets)
 app.command("quota")(filesets.quota)
+app.command("path")(filesets.path)
 app.command("status")(transfers.status)
 app.command("queue")(transfers.queue)
 app.command("cancel")(transfers.cancel)
 app.command("warm")(warm.warm)
+app.command("cool")(cool_commands.cool)
+app.command("release")(cool_commands.release)
 app.command("whoami")(topology.whoami)
 app.command("locations")(topology.locations)
 app.command("storages")(topology.storages)
+app.add_typer(admin_commands.admin_app, name="admin")
 
 
 def default_client(settings: Settings, runtime: Runtime) -> "StashClient":
