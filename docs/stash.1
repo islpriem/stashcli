@@ -1,0 +1,197 @@
+.TH STASH 1 "2026-09-02" "stash" "STASH User Commands"
+.SH NAME
+stash \- named filesets on cache storage, warmed from a source storage
+.SH SYNOPSIS
+.B stash
+[\fIGLOBAL OPTIONS\fR]
+.I COMMAND
+[\fIARGS\fR]
+.SH DESCRIPTION
+STASH stages data for HPC jobs. A
+.B fileset
+is a named directory on a cache storage with a reserved size. A
+.B cached
+fileset is filled from a source storage and can be rebuilt from it; an
+.B output
+fileset is created empty, written by jobs, and exists nowhere else until it is flushed.
+.PP
+Every decision \(em whether an allocation fits, what a transfer will cost, where a
+fileset lives \(em belongs to the server. This client asks and reports.
+.SH REFERENCES
+.TP
+.B STORAGE:/path
+A path inside a storage system. The leading slash is what makes it a path.
+.TP
+.B STORAGE:name
+A fileset on a storage system.
+.TP
+.B name
+A fileset on the default storage, from \fB--storage\fR, \fBSTASH_STORAGE\fR or the
+config file. With no default, the command lists the storages it could have meant and
+exits 2; it never guesses.
+.SH GLOBAL OPTIONS
+.TP
+.B \-\-server \fIURL\fR
+The controller. Also \fBSTASH_SERVER\fR.
+.TP
+.B \-\-storage \fIID\fR
+Default storage for bare fileset names.
+.TP
+.B \-\-json
+One JSON object on stdout and nothing else.
+.TP
+.B \-\-no\-color
+Never colour the output. \fBNO_COLOR\fR does the same.
+.TP
+.B \-\-timeout \fISECONDS\fR
+Per-request timeout.
+.TP
+.B \-y, \-\-yes
+Do not ask before anything destructive.
+.TP
+.B \-q, \-\-quiet
+Say less. \fB-v\fR says more.
+.TP
+.B \-\-version
+Print the version and exit.
+.SH COMMANDS
+.SS Reading
+.TP
+.B stash whoami
+The user, their groups, whether they are an admin, and the server version.
+.TP
+.B stash locations
+The sites the cluster spans.
+.TP
+.B stash storages
+Storages with their roles, tiers, drivers, drain state and daemon health.
+.TP
+.B stash fileset list \fR[\fB\-\-storage \fIS\fR] [\fB\-\-user \fIU\fR] [\fB\-\-kind \fIcached|output\fR] [\fB\-\-state \fIS\fR] [\fB\-l\fR]
+Filesets with what they reserve and what they use.
+.B stash list
+is the same command.
+.TP
+.B stash fileset show \fIFILESET\fR
+One fileset: where it is, what it holds, and every transfer that touched it.
+.TP
+.B stash quota \fR[\fB\-\-user \fIU\fR] [\fB\-\-storage \fIS\fR]
+Limits, allocation and usage per cache, and cluster-wide.
+.TP
+.B stash path \fIFILESET\fR
+The absolute path, one line, nothing else. Exit 4 if the fileset does not exist or is
+not READY, so a job script can branch on it.
+.SS Moving data
+.TP
+.B stash warm \fISOURCE TARGET\fR [\fB\-\-size \fISIZE\fR] [\fB\-\-refresh\fR] [\fB\-\-dry\-run\fR] [\fB\-\-wait \fR[\fB\-\-timeout \fIT\fR]]
+Fill a cached fileset from a path on a source storage, creating it if the name is free.
+\fB--dry-run\fR shows the preflight and submits nothing.
+.TP
+.B stash fileset create \fITARGET\fB \-\-size \fISIZE\fR
+An empty output fileset with a reserved size.
+.TP
+.B stash fileset resize \fIFILESET\fB \-\-size \fISIZE\fR
+Change what a fileset reserves. Shrinking asks first.
+.TP
+.B stash cool \fIFILESET\fR [\fB\-\-to \fISTORAGE:/path\fR] [\fB\-\-keep\fR] [\fB\-\-discard\fR] [\fB\-\-wait\fR]
+Write a fileset out, release it, or both. With \fB--to\fR the fileset is flushed and then
+released unless \fB--keep\fR. Without \fB--to\fR it is released; an output fileset holds
+the only copy of its data, so the server refuses unless \fB--discard\fR says the data is
+not wanted.
+.TP
+.B stash release \fIFILESET\fR [\fB\-\-force\fR]
+The destructive half of \fBcool\fR, said plainly. \fB--force\fR is \fB--discard\fR.
+.SS Transfers
+.TP
+.B stash status \fR[\fITRANSFER_ID...\fR] [\fB\-\-user \fIU\fR] [\fB\-\-state \fIS\fR] [\fB\-\-all\fR] [\fB\-\-watch \fR[\fB\-\-interval \fIN\fR]]
+Your transfers, or the ones named. \fB--watch\fR polls to a terminal state: a bar on a
+terminal, a line per poll in a job log. Ctrl-C detaches without cancelling.
+.TP
+.B stash queue \fR[\fB\-\-storage \fIS\fR] [\fB\-\-route \fIR\fR] [\fB\-\-user \fIU\fR] [\fB\-\-limit \fIN\fR]
+What everyone is waiting for.
+.TP
+.B stash cancel \fITRANSFER_ID...\fR
+Stop transfers. What has already arrived stays where it is.
+.SS Administration
+These need admin rights; the server decides, not the client.
+.TP
+.B stash admin limit set \fIUSER\fR [\fISTORAGE\fR] \fISIZE\fR
+Set a per-storage or cluster-wide allocation limit. Lowering one below what a user
+already holds blocks their next allocation and deletes nothing.
+.TP
+.B stash admin limit unset \fIUSER\fR [\fISTORAGE\fR]
+Clear a limit, so the configured default applies again.
+.TP
+.B stash admin report usage \fR[\fB\-\-group\-by \fIuser|storage|route|location\fR] [\fB\-\-since \fID\fR] [\fB\-\-until \fID\fR]
+What was transferred in a window.
+.TP
+.B stash admin report allocation
+Who holds what, and whose filesets are past what they reserved.
+.TP
+.B stash admin drain \fISTORAGE\fR
+Stop new work on a storage; what is running finishes.
+.B stash admin undrain \fISTORAGE\fR
+lets it take work again.
+.SH SIZES
+Input takes IEC and SI suffixes and they differ:
+.B 500Gi
+is 500 \(mu 1024\u3\d,
+.B 500G
+is 500 \(mu 1000\u3\d. Human output is IEC with one decimal;
+.B \-\-json
+always carries raw bytes.
+.SH EXIT CODES
+.TP
+.B 0
+Success.
+.TP
+.B 1
+Generic or unexpected failure. Also a \fB--wait\fR that ran out of \fB--timeout\fR: the
+transfer is still running.
+.TP
+.B 2
+Usage error.
+.TP
+.B 3
+Authentication failed; check that munged is running.
+.TP
+.B 4
+Not found, or not ready.
+.TP
+.B 5
+Allocation or capacity exceeded.
+.TP
+.B 6
+Conflict, or not permitted.
+.TP
+.B 7
+Server or storage unavailable.
+.TP
+.B 8
+A transfer failed, with \fB--wait\fR.
+.TP
+.B 130
+Interrupted.
+.SH ENVIRONMENT
+.TP
+.B STASH_SERVER
+Controller URL.
+.TP
+.B STASH_STORAGE
+Default storage for bare fileset names.
+.TP
+.B NO_COLOR
+Any value turns colour off.
+.SH FILES
+.TP
+.I $XDG_CONFIG_HOME/stash/config.toml
+Per-user configuration.
+.TP
+.I /etc/stash/stashcli.toml
+System-wide configuration.
+.SH COMPLETION
+.B stash \-\-install\-completion
+installs completion for the current shell;
+.B stash \-\-show\-completion
+prints it. Storage ids and fileset names are completed from the server.
+.SH SEE ALSO
+The STASH operations guide, for what an operator has to decide and watch.
