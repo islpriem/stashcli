@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — unreleased
+## 0.1.0 (unreleased)
 
 ### Added
 
@@ -30,7 +30,7 @@
   progress bar on a terminal, a line per poll in a job log, exit 8 on failure. Ctrl-C
   detaches without cancelling. `--timeout` bounds a `--wait` and exits 1 when it runs out.
 - `stash path`: the absolute path on stdout, one line, nothing else, and exit 4 when
-  there is nothing worth printing — including a fileset that is not READY yet, so a job
+  there is nothing worth printing, including a fileset that is not READY yet, so a job
   script can branch on it.
 - `cool` and `release`. `cool --to STORAGE:/path` writes a fileset out and releases it
   unless `--keep`; without `--to` it releases. What may be released without a flush stays
