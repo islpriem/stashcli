@@ -1,4 +1,4 @@
-.TH STASH 1 "2026-09-02" "stash" "STASH User Commands"
+.TH STASH 1 "2026-09-12" "stash" "STASH User Commands"
 .SH NAME
 stash \- named filesets on cache storage, warmed from a source storage
 .SH SYNOPSIS
@@ -15,8 +15,8 @@ fileset is filled from a source storage and can be rebuilt from it; an
 .B output
 fileset is created empty, written by jobs, and exists nowhere else until it is flushed.
 .PP
-Every decision \(em whether an allocation fits, what a transfer will cost, where a
-fileset lives \(em belongs to the server. This client asks and reports.
+Every decision (whether an allocation fits, what a transfer will cost, where a
+fileset lives) belongs to the server. This client asks and reports.
 .SH REFERENCES
 .TP
 .B STORAGE:/path
@@ -194,4 +194,4 @@ installs completion for the current shell;
 .B stash \-\-show\-completion
 prints it. Storage ids and fileset names are completed from the server.
 .SH SEE ALSO
-The STASH operations guide, for what an operator has to decide and watch.
+stashd, the server, and its documentation: https://github.com/islpriem/stashd
