@@ -1,6 +1,19 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.1
+
+### Added
+
+- MIT license, shipped in the wheel and the sdist.
+
+### Fixed
+
+- `--help` on a subcommand (`stash warm --help`, `stash admin limit set --help`, …) works
+  with no server configured: settings are resolved when a command first needs them.
+- The sdist carries only the project: its include patterns are anchored to the root and
+  no longer match local caches in the checkout.
+
+## 0.1.0
 
 ### Added
 
