@@ -1,17 +1,50 @@
 """Global options, exit codes and --json shapes."""
 
+import os
+import sys
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import httpx
 import pytest
+from typer.main import get_command
 
 from stashcli import __version__
-from stashcli.main import main
+from stashcli.main import app, main
 from stashcli.runtime import Runtime
 from tests.conftest import HEADERS
 
 RuntimeFor = Callable[..., Runtime]
+
+
+def command_paths() -> list[list[str]]:
+    """Every group and command below `stash`, as the words a user types."""
+    found: list[list[str]] = []
+
+    def walk(group: object, prefix: list[str]) -> None:
+        for name, command in getattr(group, "commands", {}).items():
+            found.append([*prefix, name])
+            walk(command, [*prefix, name])
+
+    walk(get_command(app), [])
+    return found
+
+
+@pytest.fixture
+def nothing_configured(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """No STASH_* variable, no config file, and no client may be built."""
+    for name in [name for name in os.environ if name.startswith("STASH_")]:
+        monkeypatch.delenv(name)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setattr("stashcli.config.settings.SYSTEM_CONFIG", tmp_path / "stashcli.toml")
+
+    def no_network(settings: object, runtime: object) -> object:
+        raise AssertionError("help built a client")
+
+    monkeypatch.setattr("stashcli.main.default_client", no_network)
+    # click names the program after argv[0], which is pytest here.
+    monkeypatch.setattr(sys, "argv", ["stash"])
 
 
 def envelope(status: int, code: str) -> Callable[[httpx.Request], httpx.Response]:
@@ -60,6 +93,16 @@ class TestGlobalOptions:
 
         assert code == 2
         assert "STASH_SERVER" in capsys.readouterr().err
+
+
+class TestHelp:
+    @pytest.mark.parametrize("path", command_paths(), ids=" ".join)
+    def test_every_command_explains_itself_with_nothing_configured(
+        self, nothing_configured: None, capsys: pytest.CaptureFixture[str], path: list[str]
+    ) -> None:
+        assert main([*path, "--help"]) == 0
+
+        assert f"Usage: stash {' '.join(path)} " in capsys.readouterr().out
 
 
 class TestWhoAmI:
@@ -299,7 +342,9 @@ def test_the_real_client_uses_munge_and_the_configured_timeout() -> None:
     from stashcli.render.output import OutputOptions
 
     settings = Settings(server="http://controller:8000", storage=None, timeout=7.0)
-    runtime = Runtime(settings=settings, output=OutputOptions(), make_client=default_client)
+    runtime = Runtime(
+        load_settings=lambda: settings, output=OutputOptions(), make_client=default_client
+    )
 
     client = default_client(settings, runtime)
 
@@ -307,6 +352,24 @@ def test_the_real_client_uses_munge_and_the_configured_timeout() -> None:
     assert isinstance(client._auth, MungeAuthProvider)
     assert client._client.timeout.read == 7.0
     client.close()
+
+
+def test_settings_are_resolved_on_first_use_and_only_once() -> None:
+    from stashcli.config.settings import Settings
+    from stashcli.main import default_client
+    from stashcli.render.output import OutputOptions
+
+    resolved: list[Settings] = []
+
+    def load() -> Settings:
+        resolved.append(Settings(server="http://controller:8000", storage=None, timeout=7.0))
+        return resolved[-1]
+
+    runtime = Runtime(load_settings=load, output=OutputOptions(), make_client=default_client)
+
+    assert resolved == []
+    assert runtime.settings is runtime.settings
+    assert len(resolved) == 1
 
 
 def test_the_package_exposes_only_its_version() -> None:

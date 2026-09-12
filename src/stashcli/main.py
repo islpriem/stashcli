@@ -103,15 +103,16 @@ def configure(
             )
         return
     environment = dict(os.environ)
-    settings = resolve_settings(
-        server=server,
-        storage=storage,
-        timeout=timeout,
-        env=environment,
-        config_paths=default_config_paths(environment, Path.home()),
-    )
     ctx.obj = Runtime(
-        settings=settings,
+        # click runs this callback before a subcommand parses --help. Resolving on first
+        # use lets help work with nothing configured.
+        load_settings=lambda: resolve_settings(
+            server=server,
+            storage=storage,
+            timeout=timeout,
+            env=environment,
+            config_paths=default_config_paths(environment, Path.home()),
+        ),
         output=OutputOptions.detect(
             json=json_output, no_color=no_color, quiet=quiet, stream=sys.stdout
         ),
