@@ -15,7 +15,7 @@ Requires Python 3.12 or later, libmunge with a running `munged` that holds the c
 key, and a reachable stashd controller.
 
 ```bash
-uv tool install git+ssh://git@github.com/islpriem/stashcli.git
+uv tool install git+https://github.com/islpriem/stashcli.git
 ```
 
 For nodes without internet access, build a wheelhouse on a connected machine with the
@@ -139,3 +139,7 @@ client drifts from it. To try the client against a real controller, use the
 - [stashd docs](https://github.com/islpriem/stashd/tree/main/docs): concepts,
   configuration, operations
 - [Changelog](CHANGELOG.md)
+
+## License
+
+MIT, see [LICENSE](LICENSE).
