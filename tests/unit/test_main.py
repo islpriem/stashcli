@@ -8,6 +8,7 @@ from typing import Any
 
 import httpx
 import pytest
+from rich.text import Text
 from typer.main import get_command
 
 from stashcli import __version__
@@ -102,7 +103,9 @@ class TestHelp:
     ) -> None:
         assert main([*path, "--help"]) == 0
 
-        assert f"Usage: stash {' '.join(path)} " in capsys.readouterr().out
+        # GitHub Actions makes Typer force colour; the words matter, not the styling.
+        out = Text.from_ansi(capsys.readouterr().out).plain
+        assert f"Usage: stash {' '.join(path)} " in out
 
 
 class TestWhoAmI:
