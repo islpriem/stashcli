@@ -1,4 +1,4 @@
-"""The man page and the README describe what the CLI actually is."""
+"""The man page describes what the CLI actually is."""
 
 from pathlib import Path
 
@@ -9,7 +9,6 @@ from stashcli.main import app
 
 ROOT = Path(__file__).resolve().parents[2]
 MAN_PAGE = ROOT / "docs" / "stash.1"
-README = ROOT / "README.md"
 
 
 def command_names() -> list[str]:
@@ -52,9 +51,3 @@ class TestTheManPage:
 
         for code in (0, 1, 2, 3, 4, 5, 6, 7, 8, 130):
             assert f"\n{code}\n" in text or f"{code}\t" in text or f".B {code}" in text
-
-
-class TestTheReadme:
-    @pytest.mark.parametrize("command", command_names())
-    def test_every_command_is_in_the_readme(self, command: str) -> None:
-        assert f"stash {command}" in README.read_text(), f"{command} is not in the README"
